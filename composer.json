@@ -1,0 +1,44 @@
+{
+  "name": "dotplant/entity-structure",
+  "description": "Base common structure for DotPlant3 Entity system",
+  "type": "dotplant-extension",
+  "keywords": ["yii2", "dotplant", "entity", "structure"],
+  "license": "MIT",
+  "minimum-stability": "dev",
+  "authors": [
+    {
+      "name": "Pavel Naumov",
+      "email": "huggbies@email.su"
+    }
+  ],
+  "require": {
+    "php": ">=5.5.0",
+    "yiisoft/yii2": "~2.0.0",
+    "devgroup/dotplant": "dev-master",
+    "devgroup/yii2-entity": "*",
+    "devgroup/yii2-multilingual": "*",
+    "devgroup/yii2-data-structure-tools": "*"
+  },
+  "require-dev": {
+    "yiisoft/yii2-codeception": "~2.0.0",
+    "codeception/codeception": "^2.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "DotPlant\\EntityStructure\\": "src/"
+    }
+  },
+  "extra": {
+    "yii2-extension": {
+      "name": "DotPlant Entity Structure",
+      "name_ru": "DotPlant структура сущностей",
+      "iconUrl": "",
+      "description_ru": "Расширение с базовой общей структурой для системы сущностей DotPlant3 CMS"
+    },
+    "migrationPath": [
+      "src/migrations"
+    ],
+    "configurables": "src/configurables.php",
+    "translationCategory": "dotplant.entity.structure"
+  }
+}
