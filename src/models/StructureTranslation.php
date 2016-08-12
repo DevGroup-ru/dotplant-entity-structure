@@ -5,7 +5,9 @@ namespace DotPlant\EntityStructure\models;
 
 use DevGroup\Entity\traits\EntityTrait;
 use DevGroup\Entity\traits\SeoTrait;
+use DotPlant\EntityStructure\StructureModule;
 use yii\db\ActiveRecord;
+use Yii;
 
 /**
  * Class StructureTranslation
@@ -39,8 +41,14 @@ class StructureTranslation extends ActiveRecord
     }
 
     protected $rules = [
+        [['is_active'], 'integer'],
         ['name', 'string', 'max' => 255],
         ['name', 'required'],
+    ];
+
+    protected $attributeLabels = [
+        'is_active' => 'Is Active',
+        'name' => 'Name',
     ];
 
     //TODO $url

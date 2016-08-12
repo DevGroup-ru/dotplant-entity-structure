@@ -2,6 +2,7 @@
 
 namespace DotPlant\EntityStructure\actions;
 
+use DevGroup\Multilingual\models\Context;
 use DevGroup\TagDependencyHelper\NamingHelper;
 use Yii;
 use yii\base\Action;
@@ -9,6 +10,7 @@ use yii\base\InvalidConfigException;
 use yii\caching\TagDependency;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
+use yii\helpers\ArrayHelper;
 use yii\web\Response;
 
 /**
@@ -35,6 +37,8 @@ class BaseEntityTreeAction extends Action
     public $querySortOrder = 'sort_order';
 
     public $querySelectedAttribute = 'selected_id';
+
+    public $contextIdAttribute = 'context_id';
     /**
      * Additional conditions for retrieving tree(ie. don't display nodes marked as deleted)
      * @var array
@@ -74,10 +78,14 @@ class BaseEntityTreeAction extends Action
         $cacheKey = "AdjacencyFullTreeData:{$this->cacheKey}:{$class}:{$this->querySortOrder}."
             . Yii::$app->multilingual->language_id;
 
-        if (false === $result = Yii::$app->cache->get($cacheKey)) {
+        if (false === false /*$result = Yii::$app->cache->get($cacheKey)*/) {
+            $contexts = ArrayHelper::map(Context::find()->all(), 'id', 'name');
             /** @var ActiveQuery $query */
             $query = $class::find()
-                ->orderBy([$this->querySortOrder => SORT_ASC]);
+                ->orderBy([
+                    $this->contextIdAttribute => SORT_ASC,
+                    $this->querySortOrder => SORT_ASC
+                ]);
 
             if (count($this->whereCondition) > 0) {
                 $query = $query->where($this->whereCondition);
@@ -89,13 +97,18 @@ class BaseEntityTreeAction extends Action
 
             $result = [];
             foreach ($rows as $row) {
+                $text = ($row[$this->modelParentAttribute] > 0)
+                    ? $row['defaultTranslation'][$this->modelLabelAttribute]
+                    : ($row['defaultTranslation'][$this->modelLabelAttribute]
+                        . " ({$contexts[$row[$this->contextIdAttribute]]})");
                 $item = [
                     'id' => $row[$this->modelIdAttribute],
                     'parent' => ($row[$this->modelParentAttribute] > 0) ? $row[$this->modelParentAttribute] : '#',
-                    'text' => $row['defaultTranslation'][$this->modelLabelAttribute],
+                    'text' => $text,
                     'a_attr' => [
                         'data-id' => $row[$this->modelIdAttribute],
-                        'data-parent_id' => $row[$this->modelParentAttribute]
+                        'data-parent_id' => $row[$this->modelParentAttribute],
+                        'data-context_id' => $row[$this->contextIdAttribute],
                     ],
                 ];
 

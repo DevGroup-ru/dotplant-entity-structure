@@ -53,7 +53,7 @@ class BaseEntityEditAction extends Action
     /**
      * @inheritdoc
      */
-    public function run($id = null)
+    public function run($id = null, $parent_id = null)
     {
         $entityClass = $this->entityClass;
         $entityName = StringHelper::basename($entityClass);
@@ -74,6 +74,9 @@ class BaseEntityEditAction extends Action
             $structureModel->translations;
         } else {
             $structureModel->loadDefaultValues();
+            if (null !== $parent_id) {
+                $structureModel->parent_id = $parent_id;
+            }
         }
         $structureModel->autoSaveProperties = true;
         $post = Yii::$app->request->post();

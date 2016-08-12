@@ -11,6 +11,7 @@ use DevGroup\TagDependencyHelper\CacheableActiveRecord;
 use DevGroup\TagDependencyHelper\TagDependencyTrait;
 use DotPlant\EntityStructure\StructureModule;
 use yii\data\ActiveDataProvider;
+use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 use Yii;
 use yii\helpers\ArrayHelper;
@@ -157,9 +158,67 @@ class BaseStructure extends ActiveRecord
         ];
     }
 
+    /**
+     * Override safe attributes to include translation attributes
+     * @return array
+     */
+    public function safeAttributes()
+    {
+        $t = new StructureTranslation();
+        return ArrayHelper::merge(parent::safeAttributes(), $t->safeAttributes());
+    }
+
+    /**
+     * Override for filtering in grid
+     * @param string $attribute
+     *
+     * @return bool
+     */
+    public function isAttributeActive($attribute)
+    {
+        return in_array($attribute, $this->safeAttributes());
+    }
+
+    /**
+     * Override Multilingual find method to include unpublished records
+     *
+     * @return object
+     * @throws \yii\base\InvalidConfigException
+     */
+    public static function find()
+    {
+        /** @var ActiveQuery $query */
+        $query = Yii::createObject(ActiveQuery::className(), [get_called_class()]);
+        return $query = $query->innerJoinWith(['defaultTranslation']);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function beforeSave($insert)
+    {
+        if (true === parent::beforeSave($insert)) {
+            //jstree change parent action
+            if ($this->parent_id != 0) {
+                if ($this->context_id != $this->parent->context_id) {
+                    $this->context_id = $this->parent->context_id;
+                }
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Finds models
+     *
+     * @param $params
+     * @return ActiveDataProvider
+     */
     public function search($params)
     {
-        /* @var $query \yii\db\ActiveQuery */
+        /* @var $query ActiveQuery */
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query = static::find(),
@@ -169,6 +228,9 @@ class BaseStructure extends ActiveRecord
         ]);
         if (null != $this->parent_id) {
             $query->andWhere(['parent_id' => $this->parent_id]);
+        }
+        if (null != $this->context_id) {
+            $query->andWhere(['context_id' => $this->context_id]);
         }
         $dataProvider->sort->attributes['name'] = [
             'asc' => [StructureTranslation::tableName() . '.name' => SORT_ASC],
@@ -187,7 +249,7 @@ class BaseStructure extends ActiveRecord
         }
         $query->andFilterWhere(['id' => $this->id]);
         $translation = new StructureTranslation();
-        if (false === $translation->load(static::fetchParams($params, self::class, $translation))) {
+        if (false === $translation->load(static::fetchParams($params, static::class, $translation))) {
             return $dataProvider;
         }
         $query->andFilterWhere(['like', StructureTranslation::tableName() . '.name', $this->name]);
@@ -198,6 +260,8 @@ class BaseStructure extends ActiveRecord
     }
 
     /**
+     * Workaround to have ability use Model::load() method instead assigning values from request by hand
+     *
      * @param array $params
      * @param string $fromClass class name
      * @param ActiveRecord $toModel
@@ -205,7 +269,10 @@ class BaseStructure extends ActiveRecord
      */
     public static function fetchParams($params, $fromClass, $toModel)
     {
-        if (true === empty($params) || false === class_exists($fromClass) || false === $toModel instanceof ActiveRecord) {
+        if (true === empty($params)
+            || false === class_exists($fromClass)
+            || false === $toModel instanceof ActiveRecord
+        ) {
             return [];
         }
         $outParams = [];
@@ -223,7 +290,7 @@ class BaseStructure extends ActiveRecord
     }
 
     /**
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
      */
     public function getEntity()
     {
@@ -231,7 +298,7 @@ class BaseStructure extends ActiveRecord
     }
 
     /**
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
      */
     public function getStructureTranslations()
     {
@@ -239,7 +306,7 @@ class BaseStructure extends ActiveRecord
     }
 
     /**
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
      */
     public function getParent()
     {
@@ -247,7 +314,7 @@ class BaseStructure extends ActiveRecord
     }
 
     /**
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
      */
     public function getChildren()
     {

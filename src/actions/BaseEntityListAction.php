@@ -35,7 +35,8 @@ class BaseEntityListAction extends Action
         if (false === is_subclass_of($entityClass, BaseStructure::class)) {
             throw new InvalidConfigException(Yii::t(
                 StructureModule::TRANSLATION_CATEGORY,
-                "The 'entityClass' must extend 'DotPlant\\EntityStructure\\models\\BaseStructure'!"
+                "The 'entityClass' must extend {class}!",
+                ['class' => 'DotPlant\\EntityStructure\\models\\BaseStructure']
             ));
         }
         parent::init();
@@ -44,13 +45,16 @@ class BaseEntityListAction extends Action
     /**
      * @inheritdoc
      */
-    public function run($parent_id = null)
+    public function run($id = null, $context_id = null)
     {
         $entityClass = $this->entityClass;
         /** @var BaseStructure $searchModel */
         $searchModel = new $entityClass(['is_active' => '']);
-        if (null !== $parent_id && 0 != $parent_id) {
-            $searchModel->parent_id = $parent_id;
+        if (null !== $id) {
+            $searchModel->parent_id = (int)$id;
+        }
+        if (null !== $context_id) {
+            $searchModel->context_id = (int)$context_id;
         }
         $params = Yii::$app->request->get();
         $dataProvider = $searchModel->search($params);
@@ -59,7 +63,7 @@ class BaseEntityListAction extends Action
             [
                 'dataProvider' => $dataProvider,
                 'searchModel' => $searchModel,
-                'parentId' => ($parent_id === null) ? 0 : $parent_id,
+                'parentId' => ($id === null) ? 0 : $id,
             ]
         );
     }
