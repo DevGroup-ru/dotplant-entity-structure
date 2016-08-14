@@ -7,6 +7,7 @@ This extension provides basic database structure, basic CRUD actions and default
 ## Installation
 
 Best way to install this extension is to use DotPlant ExtensionsManager included in every DotPlant installation.
+
 1. Go to the `site.com/extensions-manager/extensions`
 2. Click `Search` section in the left navigation
 3. Find `dotplant/entity-structure`
