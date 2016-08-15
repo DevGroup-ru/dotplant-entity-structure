@@ -2,10 +2,10 @@
 
 namespace DotPlant\EntityStructure\actions;
 
+use DevGroup\AdminUtils\actions\BaseAdminAction;
 use DotPlant\EntityStructure\models\BaseStructure;
 use DotPlant\EntityStructure\models\StructureTranslation;
 use DotPlant\EntityStructure\StructureModule;
-use yii\base\Action;
 use yii\base\InvalidConfigException;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
@@ -16,7 +16,7 @@ use Yii;
  * Class BaseEntityAutocompleteAction
  * @package DotPlant\EntityStructure\actions
  */
-class BaseEntityAutocompleteAction extends Action
+class BaseEntityAutocompleteAction extends BaseAdminAction
 {
     /**
      * @var array fields to search against

@@ -48,9 +48,14 @@ class BaseStructure extends ActiveRecord
      */
     public static function tableName()
     {
-        return '{{%structure}}';
+        return '{{%dotplant_structure}}';
     }
 
+    /**
+     * Allows to configure count per page listed records separately for each DotPlant Entity
+     *
+     * @return int
+     */
     protected static function getPageSize()
     {
         return StructureModule::module()->defaultPageSize;
@@ -248,6 +253,7 @@ class BaseStructure extends ActiveRecord
             return $dataProvider;
         }
         $query->andFilterWhere(['id' => $this->id]);
+        $query->andFilterWhere(['is_deleted' => $this->is_deleted]);
         $translation = new StructureTranslation();
         if (false === $translation->load(static::fetchParams($params, static::class, $translation))) {
             return $dataProvider;

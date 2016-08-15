@@ -14,10 +14,10 @@
   "require": {
     "php": ">=5.5.0",
     "yiisoft/yii2": "~2.0.0",
-    "devgroup/dotplant": "dev-master",
     "devgroup/yii2-entity": "*",
     "devgroup/yii2-multilingual": "*",
-    "devgroup/yii2-data-structure-tools": "*"
+    "devgroup/yii2-data-structure-tools": "*",
+    "devgroup/yii2-admin-utils": "dev-master"
   },
   "require-dev": {
     "yiisoft/yii2-codeception": "~2.0.0",

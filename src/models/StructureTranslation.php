@@ -37,7 +37,7 @@ class StructureTranslation extends ActiveRecord
      */
     public static function tableName()
     {
-        return '{{%structure_translation}}';
+        return '{{%dotplant_structure_translation}}';
     }
 
     protected $rules = [
@@ -46,10 +46,13 @@ class StructureTranslation extends ActiveRecord
         ['name', 'required'],
     ];
 
-    protected $attributeLabels = [
-        'is_active' => 'Is Active',
-        'name' => 'Name',
-    ];
+    protected function getAttributeLabels()
+    {
+        return [
+            'is_active' => Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Is Active'),
+            'name' => Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Name'),
+        ];
+    }
 
     //TODO $url
 }

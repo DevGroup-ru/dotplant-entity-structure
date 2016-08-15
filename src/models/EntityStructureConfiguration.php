@@ -19,12 +19,14 @@ class EntityStructureConfiguration extends BaseConfigurationModel
     public function __construct($config = [])
     {
         $attributes = [
-            'defaultPageSize'
+            'defaultPageSize',
+            'showHiddenInTree'
         ];
         parent::__construct($attributes, $config);
         /** @var StructureModule $module */
         $module = StructureModule::module();
         $this->defaultPageSize = $module->defaultPageSize;
+        $this->showHiddenInTree = $module->showHiddenInTree;
     }
 
     /**
@@ -34,6 +36,7 @@ class EntityStructureConfiguration extends BaseConfigurationModel
     {
         return [
             [['defaultPageSize'], 'integer'],
+            [['showHiddenInTree'], 'boolean']
         ];
     }
 
@@ -44,6 +47,7 @@ class EntityStructureConfiguration extends BaseConfigurationModel
     {
         return [
             'defaultPageSize' => Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Default Items Per Page'),
+            'showHiddenInTree' => Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Show Hidden Records In Tree'),
         ];
     }
 
@@ -82,6 +86,8 @@ class EntityStructureConfiguration extends BaseConfigurationModel
             'modules' => [
                 'entityStructure' => [
                     'class' => StructureModule::class,
+                    'defaultPageSize' => $this->defaultPageSize,
+                    'showHiddenInTree' => (bool)$this->showHiddenInTree
                 ]
             ],
         ];
@@ -101,7 +107,7 @@ class EntityStructureConfiguration extends BaseConfigurationModel
     public function aliases()
     {
         return [
-            '@DotPlant/EntityStructure' =>  realpath(dirname(__DIR__)),
+            '@DotPlant/EntityStructure' => realpath(dirname(__DIR__)),
         ];
     }
 }

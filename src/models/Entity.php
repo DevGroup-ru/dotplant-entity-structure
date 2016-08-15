@@ -22,7 +22,7 @@ class Entity extends ActiveRecord
      */
     public static function tableName()
     {
-        return '{{%entity}}';
+        return '{{%dotplant_entity}}';
     }
 
     /**

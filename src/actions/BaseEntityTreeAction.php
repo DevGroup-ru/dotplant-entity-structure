@@ -39,6 +39,8 @@ class BaseEntityTreeAction extends Action
     public $querySelectedAttribute = 'selected_id';
 
     public $contextIdAttribute = 'context_id';
+
+    public $showHiddenInTree = null;
     /**
      * Additional conditions for retrieving tree(ie. don't display nodes marked as deleted)
      * @var array
@@ -76,9 +78,9 @@ class BaseEntityTreeAction extends Action
             $current_selected_id = Yii::$app->request->get($this->queryParentAttribute);
         }
         $cacheKey = "AdjacencyFullTreeData:{$this->cacheKey}:{$class}:{$this->querySortOrder}."
-            . Yii::$app->multilingual->language_id;
+            . Yii::$app->multilingual->language_id . $this->showHiddenInTree;
 
-        if (false === false /*$result = Yii::$app->cache->get($cacheKey)*/) {
+        if (false === $result = Yii::$app->cache->get($cacheKey)) {
             $contexts = ArrayHelper::map(Context::find()->all(), 'id', 'name');
             /** @var ActiveQuery $query */
             $query = $class::find()
@@ -96,12 +98,26 @@ class BaseEntityTreeAction extends Action
             }
 
             $result = [];
+            $hidden = [];
+            $roots = $class::find()->select(['id'])->where(['is_deleted' => 1])->column();
+            $hidden += $roots;
+            foreach ($roots as $id) {
+                self::treeGoDown($id, $rows, $hidden);
+            }
             foreach ($rows as $row) {
+                $item = [];
+                if (true === in_array($row[$this->modelIdAttribute], $hidden)) {
+                    if (true === $this->showHiddenInTree) {
+                        $item['state'] = ['disabled' => true];
+                    } else {
+                        continue;
+                    }
+                }
                 $text = ($row[$this->modelParentAttribute] > 0)
                     ? $row['defaultTranslation'][$this->modelLabelAttribute]
                     : ($row['defaultTranslation'][$this->modelLabelAttribute]
                         . " ({$contexts[$row[$this->contextIdAttribute]]})");
-                $item = [
+                $item += [
                     'id' => $row[$this->modelIdAttribute],
                     'parent' => ($row[$this->modelParentAttribute] > 0) ? $row[$this->modelParentAttribute] : '#',
                     'text' => $text,
@@ -111,7 +127,6 @@ class BaseEntityTreeAction extends Action
                         'data-context_id' => $row[$this->contextIdAttribute],
                     ],
                 ];
-
                 if (null !== $this->varyByTypeAttribute) {
                     $item['type'] = $row[$this->varyByTypeAttribute];
                 }
@@ -139,5 +154,24 @@ class BaseEntityTreeAction extends Action
         }
 
         return array_values($result);
+    }
+
+    /**
+     * Recursively finds all children of node with given id
+     *
+     * @param $id
+     * @param $data
+     * @param $hidden
+     */
+    private static function treeGoDown($id, $data, &$hidden)
+    {
+        foreach ($data as $row) {
+            if ($row['parent_id'] == $id) {
+                if (false === in_array($row['id'], $hidden)) {
+                    $hidden[] = $row['id'];
+                }
+                self::treeGoDown($row['id'], $data, $hidden);
+            }
+        }
     }
 }

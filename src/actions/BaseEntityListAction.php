@@ -2,9 +2,9 @@
 
 namespace DotPlant\EntityStructure\actions;
 
+use DevGroup\AdminUtils\actions\BaseAdminAction;
 use DotPlant\EntityStructure\models\BaseStructure;
 use DotPlant\EntityStructure\StructureModule;
-use yii\base\Action;
 use yii\base\InvalidConfigException;
 use Yii;
 
@@ -13,7 +13,7 @@ use Yii;
  *
  * @package DotPlant\EntityStructure\actions
  */
-class BaseEntityListAction extends Action
+class BaseEntityListAction extends BaseAdminAction
 {
     /** @var  BaseStructure */
     public $entityClass;

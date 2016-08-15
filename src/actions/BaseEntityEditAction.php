@@ -2,13 +2,13 @@
 
 namespace DotPlant\EntityStructure\actions;
 
+use DevGroup\AdminUtils\actions\BaseAdminAction;
 use DevGroup\DataStructure\behaviors\HasProperties;
 use DevGroup\DataStructure\traits\PropertiesTrait;
 use DevGroup\Multilingual\behaviors\MultilingualActiveRecord;
 use DevGroup\TagDependencyHelper\TagDependencyTrait;
 use DotPlant\EntityStructure\models\BaseStructure;
 use DotPlant\EntityStructure\StructureModule;
-use yii\base\Action;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\StringHelper;
@@ -18,7 +18,7 @@ use yii\web\NotFoundHttpException;
  * Class BaseEntityEditAction
  * @package DotPlant\EntityStructure\actions
  */
-class BaseEntityEditAction extends Action
+class BaseEntityEditAction extends BaseAdminAction
 {
     /** @var  BaseStructure | HasProperties | TagDependencyTrait */
     public $entityClass;
