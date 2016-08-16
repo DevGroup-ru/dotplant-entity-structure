@@ -3,8 +3,10 @@
 namespace DotPlant\EntityStructure\actions;
 
 use DevGroup\AdminUtils\actions\BaseAdminAction;
+use DevGroup\Entity\traits\SoftDeleteTrait;
 use DotPlant\EntityStructure\models\BaseStructure;
 use DotPlant\EntityStructure\StructureModule;
+use yii\base\InvalidCallException;
 use yii\base\InvalidConfigException;
 use Yii;
 use yii\web\NotFoundHttpException;
@@ -39,6 +41,12 @@ class BaseEntityRestoreAction extends BaseAdminAction
                 "The 'entityClass' must extend 'DotPlant\\EntityStructure\\models\\BaseStructure'!"
             ));
         }
+        if (false === method_exists($entityClass, 'restore')) {
+            throw new InvalidCallException(Yii::t(
+                StructureModule::TRANSLATION_CATEGORY,
+                "The 'entityClass' must use 'DevGroup\\Entity\\traits\\SoftDeleteTrait'!"
+            ));
+        }
         parent::init();
     }
 
@@ -48,7 +56,7 @@ class BaseEntityRestoreAction extends BaseAdminAction
     public function run($id = null, $returnUrl = '')
     {
         $entityClass = $this->entityClass;
-        /** @var BaseStructure $model */
+        /** @var BaseStructure | SoftDeleteTrait $model */
         $model = $entityClass::loadModel(
             $id,
             true,

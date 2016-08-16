@@ -128,7 +128,6 @@ class BaseStructure extends ActiveRecord
             [
                 [
                     [
-                        'parent_id',
                         'context_id',
                         'entity_id',
                     ],
@@ -204,7 +203,7 @@ class BaseStructure extends ActiveRecord
     {
         if (true === parent::beforeSave($insert)) {
             //jstree change parent action
-            if ($this->parent_id != 0) {
+            if (null !== $this->parent_id && 0 != $this->parent_id) {
                 if ($this->context_id != $this->parent->context_id) {
                     $this->context_id = $this->parent->context_id;
                 }

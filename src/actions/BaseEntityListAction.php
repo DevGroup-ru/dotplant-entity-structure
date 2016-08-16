@@ -63,7 +63,7 @@ class BaseEntityListAction extends BaseAdminAction
             [
                 'dataProvider' => $dataProvider,
                 'searchModel' => $searchModel,
-                'parentId' => ($id === null) ? 0 : $id,
+                'parentId' => $id,
             ]
         );
     }

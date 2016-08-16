@@ -27,7 +27,7 @@ class m160804_083403_init extends Migration
             BaseStructure::tableName(),
             [
                 'id' => $this->primaryKey(),
-                'parent_id' => $this->integer()->notNull()->defaultValue(0),
+                'parent_id' => $this->integer(),
                 'context_id' => $this->integer()->notNull(),
                 'entity_id' => $this->integer()->notNull(),
                 'expand_in_tree' => $this->boolean()->notNull()->defaultValue(true),
@@ -41,11 +41,20 @@ class m160804_083403_init extends Migration
             $tableOptions
         );
         $this->createIndex('st_entity_index', BaseStructure::tableName(), 'entity_id');
+        $this->createIndex('st_children_index', BaseStructure::tableName(), 'parent_id');
         $this->addForeignKey(
             'fkEtToSt',
             BaseStructure::tableName(),
             ['entity_id'],
             Entity::tableName(),
+            ['id'],
+            'CASCADE'
+        );
+        $this->addForeignKey(
+            'stToStChildren',
+            BaseStructure::tableName(),
+            ['parent_id'],
+            BaseStructure::tableName(),
             ['id'],
             'CASCADE'
         );
@@ -89,10 +98,12 @@ class m160804_083403_init extends Migration
             );
             return false;
         }
+        $this->dropForeignKey('stToStChildren', BaseStructure::tableName());
         $this->dropForeignKey('fkEtToSt', BaseStructure::tableName());
         $this->dropForeignKey('fkStRtToSt', StructureTranslation::tableName());
         $this->dropIndex('sttr_index', StructureTranslation::tableName());
         $this->dropIndex('st_entity_index', BaseStructure::tableName());
+        $this->dropIndex('st_children_index', BaseStructure::tableName());
         $this->dropPrimaryKey('sttr_pk', StructureTranslation::tableName());
         $this->dropTable(Entity::tableName());
         $this->dropTable(BaseStructure::tableName());
