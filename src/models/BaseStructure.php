@@ -305,14 +305,6 @@ class BaseStructure extends ActiveRecord
     /**
      * @return ActiveQuery
      */
-    public function getStructureTranslations()
-    {
-        return $this->hasMany(StructureTranslation::class, ['model_id' => 'id']);
-    }
-
-    /**
-     * @return ActiveQuery
-     */
     public function getParent()
     {
         return $this->hasOne(static::class, ['id' => 'parent_id']);

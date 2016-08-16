@@ -8,6 +8,7 @@ use DevGroup\DataStructure\traits\PropertiesTrait;
 use DevGroup\Multilingual\behaviors\MultilingualActiveRecord;
 use DevGroup\TagDependencyHelper\TagDependencyTrait;
 use DotPlant\EntityStructure\models\BaseStructure;
+use DotPlant\EntityStructure\models\StructureTranslation;
 use DotPlant\EntityStructure\StructureModule;
 use Yii;
 use yii\base\InvalidConfigException;
@@ -81,6 +82,7 @@ class BaseEntityEditAction extends BaseAdminAction
         $structureModel->autoSaveProperties = true;
         $post = Yii::$app->request->post();
         $structureModel->entity_id = $structureModel->getEntityId();
+        $saved = true;
         if (false === empty($post)) {
             if (true === $structureModel->load($post)) {
                 foreach (Yii::$app->request->post('StructureTranslation', []) as $language => $data) {
@@ -89,15 +91,29 @@ class BaseEntityEditAction extends BaseAdminAction
                     }
                 }
                 if (true === $structureModel->save()) {
-                    Yii::$app->session->setFlash('success',
-                        Yii::t(StructureModule::TRANSLATION_CATEGORY, '{model} successfully saved!',
-                            ['model' => Yii::t(StructureModule::TRANSLATION_CATEGORY, $entityName)]
-                        )
-                    );
-                    if (true === $refresh) {
-                        return $this->controller->refresh();
-                    } else {
-                        return $this->controller->redirect(['pages-manage/edit', 'id' => $structureModel->id]);
+                    $translations = $structureModel->translations;
+                    if (false === empty($translations)) {
+                        /** @var StructureTranslation $model */
+                        foreach ($translations as $model) {
+                            if (false === $saved) {
+                                break;
+                            }
+                            if (false === empty($model->errors)) {
+                                $saved = false;
+                            }
+                        }
+                    }
+                    if (true === $saved) {
+                        Yii::$app->session->setFlash('success',
+                            Yii::t(StructureModule::TRANSLATION_CATEGORY, '{model} successfully saved!',
+                                ['model' => Yii::t(StructureModule::TRANSLATION_CATEGORY, $entityName)]
+                            )
+                        );
+                        if (true === $refresh) {
+                            return $this->controller->refresh();
+                        } else {
+                            return $this->controller->redirect(['pages-manage/edit', 'id' => $structureModel->id]);
+                        }
                     }
                 } else {
                     Yii::$app->session->setFlash('error',

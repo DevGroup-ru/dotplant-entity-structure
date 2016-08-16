@@ -55,15 +55,16 @@ $form = \yii\bootstrap\ActiveForm::begin([
                             <?= $form->field($model, 'expand_in_tree')->checkbox() ?>
                         </div>
                         <div class="col-sm-4">
-                            <?php if (null !== $model->parent) {
+                            <?php
+                            $cDDOptions = [];
+                            if (null !== $model->parent) {
                                 foreach ($contexts as $id => $name) {
                                     if ($id != $model->parent->context_id) {
                                         $cDDOptions['options'][$id] = ['disabled' => true];
                                     }
                                 }
-                            } else {
-                                $cDDOptions = [];
-                            } ?>
+                            }
+                            ?>
                             <?= $form->field($model, 'context_id')->dropDownList($contexts, $cDDOptions) ?>
                         </div>
                         <div class="col-sm-4">
