@@ -4,6 +4,7 @@ namespace DotPlant\EntityStructure\actions;
 
 use DevGroup\AdminUtils\actions\BaseAdminAction;
 use DotPlant\EntityStructure\models\BaseStructure;
+use DotPlant\EntityStructure\models\Entity;
 use DotPlant\EntityStructure\models\StructureTranslation;
 use DotPlant\EntityStructure\StructureModule;
 use yii\base\InvalidConfigException;
@@ -18,6 +19,9 @@ use Yii;
  */
 class BaseEntityAutocompleteAction extends BaseAdminAction
 {
+    /** @var  BaseStructure */
+    public $entityClass;
+
     /**
      * @var array fields to search against
      */
@@ -35,6 +39,18 @@ class BaseEntityAutocompleteAction extends BaseAdminAction
     {
         if (false === Yii::$app->request->isAjax) {
             throw new NotFoundHttpException(Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Page not found'));
+        }
+        if (true === empty($this->entityClass)) {
+            throw new InvalidConfigException(
+                Yii::t(StructureModule::TRANSLATION_CATEGORY, "The 'entityClass' param must be set!")
+            );
+        }
+        $entityClass = $this->entityClass;
+        if (false === is_subclass_of($entityClass, BaseStructure::class)) {
+            throw new InvalidConfigException(Yii::t(
+                StructureModule::TRANSLATION_CATEGORY,
+                "The 'entityClass' must extend 'DotPlant\\EntityStructure\\models\\BaseStructure'!"
+            ));
         }
         if (false === empty($this->searchFields)) {
             $columns = StructureTranslation::getTableSchema()->columnNames;
@@ -61,13 +77,17 @@ class BaseEntityAutocompleteAction extends BaseAdminAction
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $out = ['results' => ['id' => '', 'text' => '']];
+        $entityId = Entity::getEntityIdForClass($this->entityClass);
         if (null !== $q) {
             $query = new Query;
             $query->select('id, name AS text')
                 ->from(BaseStructure::tableName())
                 ->innerJoin(StructureTranslation::tableName(), 'id = model_id')
                 ->where($this->prepareCondition($q))
-                ->andWhere(['language_id' => Yii::$app->multilingual->language_id])
+                ->andWhere([
+                    'language_id' => Yii::$app->multilingual->language_id,
+                    'entity_id' => $entityId
+                ])
                 ->limit(20);
             $command = $query->createCommand();
             $data = $command->queryAll();

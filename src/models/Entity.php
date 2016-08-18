@@ -3,6 +3,7 @@
 namespace DotPlant\EntityStructure\models;
 
 use DotPlant\EntityStructure\StructureModule;
+use yii\base\InvalidParamException;
 use yii\db\ActiveRecord;
 use Yii;
 
@@ -17,6 +18,9 @@ use Yii;
  */
 class Entity extends ActiveRecord
 {
+    /** @var array */
+    private static $classMap = [];
+
     /**
      * @inheritdoc
      */
@@ -62,5 +66,26 @@ class Entity extends ActiveRecord
     public function getStructure()
     {
         return $this->hasMany(BaseStructure::class, ['entity_id' => 'id']);
+    }
+
+    /**
+     * Returns Entity id according to given Entity class name
+     *
+     * @param $className
+     * @return mixed
+     */
+    public static function getEntityIdForClass($className)
+    {
+        if (false === isset(self::$classMap[$className])) {
+            if (false === $id = self::find()->select('id')->where(['class_name' => $className])->scalar()) {
+                throw new InvalidParamException(Yii::t(
+                    StructureModule::TRANSLATION_CATEGORY,
+                    'Unknown entity class \'{class}\'.',
+                    ['class' => $className]
+                ));
+            }
+            self::$classMap[$className] = $id;
+        }
+        return self::$classMap[$className];
     }
 }
