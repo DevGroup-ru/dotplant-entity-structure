@@ -17,6 +17,7 @@ use yii\web\NotFoundHttpException;
 
 /**
  * Class BaseEntityEditAction
+ *
  * @package DotPlant\EntityStructure\actions
  */
 class BaseEntityEditAction extends BaseAdminAction
@@ -82,28 +83,18 @@ class BaseEntityEditAction extends BaseAdminAction
         $structureModel->autoSaveProperties = true;
         $post = Yii::$app->request->post();
         $structureModel->entity_id = $structureModel->getEntityId();
-        $saved = true;
         if (false === empty($post)) {
             if (true === $structureModel->load($post)) {
                 foreach (Yii::$app->request->post('StructureTranslation', []) as $language => $data) {
+                    $data['parentContextId'] = (int)$structureModel->context_id;
+                    $data['parentParentId'] = (int)$structureModel->parent_id;
+                    $structureModel->translate($language)->oldSlug = $structureModel->translate($language)->slug;
                     foreach ($data as $attribute => $translation) {
                         $structureModel->translate($language)->$attribute = $translation;
                     }
                 }
-                if (true === $structureModel->save()) {
-                    $translations = $structureModel->translations;
-                    if (false === empty($translations)) {
-                        /** @var StructureTranslation $model */
-                        foreach ($translations as $model) {
-                            if (false === $saved) {
-                                break;
-                            }
-                            if (false === empty($model->errors)) {
-                                $saved = false;
-                            }
-                        }
-                    }
-                    if (true === $saved) {
+                if (true === $structureModel->validate()) {
+                    if (true === $structureModel->save(false)) {
                         Yii::$app->session->setFlash('success',
                             Yii::t(StructureModule::TRANSLATION_CATEGORY, '{model} successfully saved!',
                                 ['model' => Yii::t(StructureModule::TRANSLATION_CATEGORY, $entityName)]
@@ -114,13 +105,18 @@ class BaseEntityEditAction extends BaseAdminAction
                         } else {
                             return $this->controller->redirect(['pages-manage/edit', 'id' => $structureModel->id]);
                         }
+                    } else {
+                        Yii::$app->session->setFlash('error',
+                            Yii::t(StructureModule::TRANSLATION_CATEGORY, 'An error occurred while saving {model}!',
+                                ['model' => Yii::t(StructureModule::TRANSLATION_CATEGORY, $entityName)]
+                            )
+                        );
                     }
                 } else {
-                    Yii::$app->session->setFlash('error',
-                        Yii::t(StructureModule::TRANSLATION_CATEGORY, 'An error occurred while saving {model}!',
-                            ['model' => Yii::t(StructureModule::TRANSLATION_CATEGORY, $entityName)]
-                        )
-                    );
+                    Yii::$app->session->setFlash('warning', Yii::t(
+                        StructureModule::TRANSLATION_CATEGORY,
+                        'Please verify that all fields are filled correctly!'
+                    ));
                 }
             }
         }
