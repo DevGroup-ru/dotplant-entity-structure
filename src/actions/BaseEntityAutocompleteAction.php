@@ -90,7 +90,9 @@ class BaseEntityAutocompleteAction extends BaseAdminAction
         foreach ($this->searchFields as $field) {
             $condition[] = ['like', $field, $q];
         }
-        $condition = count($this->searchFields) > 1 ? array_unshift($condition, 'or') : $condition;
+        if (count($this->searchFields) > 1) {
+            array_unshift($condition, 'or');
+        }
         return $condition;
     }
 }
