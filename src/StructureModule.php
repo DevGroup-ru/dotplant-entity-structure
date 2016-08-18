@@ -31,7 +31,7 @@ class StructureModule extends Module
     {
         $module = Yii::$app->getModule('entityStructure');
         if ($module === null) {
-            $module = new self('entityStructure');
+            $module = Yii::createObject(self::class, ['entityStructure']);
         }
         return $module;
     }
