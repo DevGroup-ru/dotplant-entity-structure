@@ -68,7 +68,7 @@ class BaseEntityEditAction extends BaseAdminAction
             true,
             86400,
             new NotFoundHttpException(Yii::t('dotplant.entity.structure', '{model} not found!',
-                ['model' => Yii::t('dotplant.entity.structure', $entityName)]
+                ['model' => Yii::t($entityClass::TRANSLATION_CATEGORY, $entityName)]
             ))
         );
         $refresh = !$structureModel->isNewRecord;
@@ -97,7 +97,7 @@ class BaseEntityEditAction extends BaseAdminAction
                     if (true === $structureModel->save(false)) {
                         Yii::$app->session->setFlash('success',
                             Yii::t('dotplant.entity.structure', '{model} successfully saved!',
-                                ['model' => Yii::t('dotplant.entity.structure', $entityName)]
+                                ['model' => Yii::t($entityClass::TRANSLATION_CATEGORY, $entityName)]
                             )
                         );
                         if (true === $refresh) {
@@ -108,7 +108,7 @@ class BaseEntityEditAction extends BaseAdminAction
                     } else {
                         Yii::$app->session->setFlash('error',
                             Yii::t('dotplant.entity.structure', 'An error occurred while saving {model}!',
-                                ['model' => Yii::t('dotplant.entity.structure', $entityName)]
+                                ['model' => Yii::t($entityClass::TRANSLATION_CATEGORY, $entityName)]
                             )
                         );
                     }

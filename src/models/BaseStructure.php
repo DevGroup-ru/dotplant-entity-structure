@@ -43,6 +43,9 @@ class BaseStructure extends ActiveRecord
     use TagDependencyTrait;
     use PropertiesTrait;
 
+    /** string this is for base actions translation */
+    const TRANSLATION_CATEGORY = 'dotplant.entity.structure';
+
     /**
      * @inheritdoc
      */

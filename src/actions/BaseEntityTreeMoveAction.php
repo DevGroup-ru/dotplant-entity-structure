@@ -25,7 +25,7 @@ class BaseEntityTreeMoveAction extends BaseAdminAction
     /** @var string | null  Entity class name */
     public $className = null;
 
-    /** @var string  */
+    /** @var string */
     public $modelParentIdField = 'parent_id';
 
     /** @var null | int */
@@ -91,7 +91,7 @@ class BaseEntityTreeMoveAction extends BaseAdminAction
                 );
                 return true;
             } else {
-                throw new InvalidParamException($model->errors);
+                throw new InvalidParamException(implode(',', $model->errors));
             }
         }
     }

@@ -12,8 +12,6 @@ use Yii;
  */
 class StructureModule extends Module
 {
-    const TRANSLATION_CATEGORY = 'dotplant.entity.structure';
-
     /** @var int Default value to be used in all child modules */
     public $defaultPageSize = 10;
 
