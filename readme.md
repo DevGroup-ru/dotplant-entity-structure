@@ -16,3 +16,7 @@ Best way to install this extension is to use DotPlant ExtensionsManager included
 6. Click `Extensions` section in the left navigation
 7. Click `Type` in the grid for order by type
 8. Find `DotPlant Entity Structure` and press `Activate`
+
+## Conception & Usage example
+
+- [Русская документация](docs/ru/extend.md)
