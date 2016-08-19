@@ -180,6 +180,81 @@ public function up()
 ```
 Следует помнить, что руками данную миграцию выполнять не нужно! Она будет выполнена автоматически при активации расширения в менеджере расширений.
 
+Чтобы иметь возможность управлять записями типа Ticket из админки, нам необходимо создать соответствующий контроллер.
+Согласно [правилам оформления кода](https://github.com/DevGroup-ru/code-style), назовем его `TicketsManageController`
+```php
+class PagesManageController extends BaseController
+{
+    /* Подключаем стандтартные поведения для разграничения прав доступа. Помним, что мы создали специальное разрешение
+    'tickets-manage', имея которое, пользователи имеют право управлять записями */
+    public function behaviors()
+    {
+        return [
+            'access' => [
+                'class' => AccessControl::class,
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'roles' => ['tickets-manage'],
+                    ],
+                ],
+            ],
+            'verbs' => [
+                'class' => VerbFilter::class,
+                'actions' => [
+                    'delete' => ['POST'],
+                ],
+            ]
+        ];
+    }
+
+    /* Подключаем необходимые экшены для управления записями. Это полный список, можно оставить только нужные */
+    public function actions()
+    {
+        return [
+            'index' => [ //вывод списка записей в GridView
+                'class' => BaseEntityListAction::class,
+                'entityClass' => Tickets::class, //обязательный параметр. Класс сущности, которой будем управлять
+                'viewFile' => '@VendorName/Tickets/views/tickets-manage/index' //файл представления. Если есть свой. Если не задать будет использован стандартный
+            ],
+            'edit' => [ //создание и редактирование записи
+                'class' => BaseEntityEditAction::class,
+                'entityClass' => Tickets::class,  //обязательный параметр. Класс сущности, которой будем управлять
+                'viewFile' => '@DotPlant/Content/views/pages-manage/edit'  //файл представления. Если есть свой. Если не задать будет использован стандартный
+            ],
+            'autocomplete' => [ //экшн для поиска с автодополнением (используется, например, для поиска родителя записи)
+                'class' => BaseEntityAutocompleteAction::class,
+                'entityClass' => Tickets::class,  //обязательный параметр. Класс сущности, которой будем управлять
+            ],
+            'delete' => [ //удаление записи. Мягкое и полное
+                'class' => BaseEntityDeleteAction::class,
+                'entityClass' => Tickets::class,  //обязательный параметр. Класс сущности, которой будем управлять
+            ],
+            'restore' => [ //восстановление записи при мягком удалении
+                'class' => BaseEntityRestoreAction::class,
+                'entityClass' => Tickets::class,  //обязательный параметр. Класс сущности, которой будем управлять
+            ],
+            'get-tree' => [ //получение данных для построение дерева в jstree виджете
+                'class' => BaseEntityTreeAction::class,
+                'className' => Tickets::class, //обязательный параметр. Класс сущности, которой будем управлять
+                'showHiddenInTree' => TicketsModule::module()->showHiddenInTree, //настройка, позволяющая скрывать или показывать удаленные записи в дереве
+            ],
+            'tree-reorder' => [ //drag-n-drop сортировка записей в дереве jstree виджета
+                'class' => TreeNodesReorderAction::class,
+                'className' => Tickets::class, //обязательный параметр. Класс сущности, которой будем управлять
+            ],
+            'tree-parent' => [ //drag-n-drop перемещение узла дерева jstree между различными родительскими узлами
+                'class' => BaseEntityTreeMoveAction::class,
+                'className' => Tickets::class, //обязательный параметр. Класс сущности, которой будем управлять
+                'saveAttributes' => ['parent_id', 'context_id'] //список сохраняемых параметров
+            ],
+
+        ];
+    }
+}
+```
+
+Теперь, после установки и активации созданного расширения управление записями будет доступно по пути `/tickets/tickets-manage`
 
 
 
