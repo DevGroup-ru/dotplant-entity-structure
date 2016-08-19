@@ -25,13 +25,13 @@ class BaseEntityDeleteAction extends BaseAdminAction
     {
         if (true === empty($this->entityClass)) {
             throw new InvalidConfigException(
-                Yii::t(StructureModule::TRANSLATION_CATEGORY, "The 'entityClass' param must be set!")
+                Yii::t('dotplant.entity.structure', "The 'entityClass' param must be set!")
             );
         }
         $entityClass = $this->entityClass;
         if (false === is_subclass_of($entityClass, BaseStructure::class)) {
             throw new InvalidConfigException(Yii::t(
-                StructureModule::TRANSLATION_CATEGORY,
+                'dotplant.entity.structure',
                 "The 'entityClass' must extend 'DotPlant\\EntityStructure\\models\\BaseStructure'!"
             ));
         }
@@ -51,7 +51,7 @@ class BaseEntityDeleteAction extends BaseAdminAction
             true,
             86400,
             new NotFoundHttpException(Yii::t(
-                StructureModule::TRANSLATION_CATEGORY,
+                'dotplant.entity.structure',
                 'Record with id {id} not found!',
                 ['id' => $id]
             ))
@@ -61,23 +61,23 @@ class BaseEntityDeleteAction extends BaseAdminAction
                 if (false !== $model->hardDelete()) {
                     Yii::$app->session->setFlash(
                         'info',
-                        Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Record has been successfully deleted.')
+                        Yii::t('dotplant.entity.structure', 'Record has been successfully deleted.')
                     );
                 } else {
                     Yii::$app->session->setFlash(
                         'warning',
-                        Yii::t(StructureModule::TRANSLATION_CATEGORY, 'An error occurred while deleting record.')
+                        Yii::t('dotplant.entity.structure', 'An error occurred while deleting record.')
                     );
                 }
             } else {
                 if (false === $model->delete() && true === $model->isDeleted()) {
                     Yii::$app->session->setFlash(
                         'info',
-                        Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Record has been successfully hidden.')
+                        Yii::t('dotplant.entity.structure', 'Record has been successfully hidden.')
                     );
                 } else {
                     Yii::$app->session->setFlash('warning', Yii::t(
-                        StructureModule::TRANSLATION_CATEGORY,
+                        'dotplant.entity.structure',
                         'An error occurred while attempting to hide record.'
                     ));
                 }
@@ -86,12 +86,12 @@ class BaseEntityDeleteAction extends BaseAdminAction
             if (false !== $model->delete()) {
                 Yii::$app->session->setFlash(
                     'info',
-                    Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Record has been successfully deleted.')
+                    Yii::t('dotplant.entity.structure', 'Record has been successfully deleted.')
                 );
             } else {
                 Yii::$app->session->setFlash(
                     'warning',
-                    Yii::t(StructureModule::TRANSLATION_CATEGORY, 'An error occurred while deleting record.')
+                    Yii::t('dotplant.entity.structure', 'An error occurred while deleting record.')
                 );
             }
         }

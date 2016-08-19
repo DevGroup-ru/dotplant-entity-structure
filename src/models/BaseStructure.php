@@ -83,7 +83,7 @@ class BaseStructure extends ActiveRecord
         if (false === isset($this->entitiesMap[static::class])) {
             if (false === $entityId = Entity::find()->select('id')->where(['class_name' => static::class])->scalar()) {
                 throw new NotFoundHttpException(Yii::t(
-                    StructureModule::TRANSLATION_CATEGORY,
+                    'dotplant.entity.structure',
                     "Unknown entity '{class}'!",
                     ['class' => static::class]
                 ));
@@ -147,18 +147,15 @@ class BaseStructure extends ActiveRecord
             $this->propertiesRules());
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function attributeLabels()
+    protected function getAttributeLabels()
     {
         return [
-            'id' => Yii::t(StructureModule::TRANSLATION_CATEGORY, 'ID'),
-            'parent_id' => Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Parent ID'),
-            'context_id' => Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Context ID'),
-            'entity_id' => Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Entity ID'),
-            'expand_in_tree' => Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Expand In Tree'),
-            'sort_order' => Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Sort Order'),
+            'id' => Yii::t('dotplant.entity.structure', 'ID'),
+            'parent_id' => Yii::t('dotplant.entity.structure', 'Parent ID'),
+            'context_id' => Yii::t('dotplant.entity.structure', 'Context ID'),
+            'entity_id' => Yii::t('dotplant.entity.structure', 'Entity ID'),
+            'expand_in_tree' => Yii::t('dotplant.entity.structure', 'Expand In Tree'),
+            'sort_order' => Yii::t('dotplant.entity.structure', 'Sort Order'),
         ];
     }
 
@@ -248,6 +245,10 @@ class BaseStructure extends ActiveRecord
             'asc' => [StructureTranslation::tableName() . '.is_active' => SORT_ASC],
             'desc' => [StructureTranslation::tableName() . '.is_active' => SORT_DESC],
         ];
+        $dataProvider->sort->attributes['slug'] = [
+            'asc' => [StructureTranslation::tableName() . '.slug' => SORT_ASC],
+            'desc' => [StructureTranslation::tableName() . '.slug' => SORT_DESC],
+        ];
         if (false === $this->load($params)) {
             return $dataProvider;
         }
@@ -260,6 +261,7 @@ class BaseStructure extends ActiveRecord
         $query->andFilterWhere(['like', StructureTranslation::tableName() . '.name', $this->name]);
         $query->andFilterWhere(['like', StructureTranslation::tableName() . '.title', $this->title]);
         $query->andFilterWhere(['like', StructureTranslation::tableName() . '.h1', $this->h1]);
+        $query->andFilterWhere(['like', StructureTranslation::tableName() . '.slug', $this->slug]);
         $query->andFilterWhere([StructureTranslation::tableName() . '.is_active' => $this->is_active]);
         return $dataProvider;
     }

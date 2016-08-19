@@ -54,9 +54,9 @@ class Entity extends ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id' => Yii::t(StructureModule::TRANSLATION_CATEGORY, 'ID'),
-            'name' => Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Name'),
-            'class_name' => Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Class Name'),
+            'id' => Yii::t('dotplant.entity.structure', 'ID'),
+            'name' => Yii::t('dotplant.entity.structure', 'Name'),
+            'class_name' => Yii::t('dotplant.entity.structure', 'Class Name'),
         ];
     }
 
@@ -79,7 +79,7 @@ class Entity extends ActiveRecord
         if (false === isset(self::$classMap[$className])) {
             if (false === $id = self::find()->select('id')->where(['class_name' => $className])->scalar()) {
                 throw new InvalidParamException(Yii::t(
-                    StructureModule::TRANSLATION_CATEGORY,
+                    'dotplant.entity.structure',
                     'Unknown entity class \'{class}\'.',
                     ['class' => $className]
                 ));

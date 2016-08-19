@@ -39,13 +39,13 @@ class BaseEntityEditAction extends BaseAdminAction
     {
         if (true === empty($this->entityClass)) {
             throw new InvalidConfigException(
-                Yii::t(StructureModule::TRANSLATION_CATEGORY, "The 'entityClass' param must be set!")
+                Yii::t('dotplant.entity.structure', "The 'entityClass' param must be set!")
             );
         }
         $entityClass = $this->entityClass;
         if (false === is_subclass_of($entityClass, BaseStructure::class)) {
             throw new InvalidConfigException(Yii::t(
-                StructureModule::TRANSLATION_CATEGORY,
+                'dotplant.entity.structure',
                 "The 'entityClass' must extend 'DotPlant\\EntityStructure\\models\\BaseStructure'!"
             ));
         }
@@ -67,8 +67,8 @@ class BaseEntityEditAction extends BaseAdminAction
             true,
             true,
             86400,
-            new NotFoundHttpException(Yii::t(StructureModule::TRANSLATION_CATEGORY, '{model} not found!',
-                ['model' => Yii::t(StructureModule::TRANSLATION_CATEGORY, $entityName)]
+            new NotFoundHttpException(Yii::t('dotplant.entity.structure', '{model} not found!',
+                ['model' => Yii::t('dotplant.entity.structure', $entityName)]
             ))
         );
         $refresh = !$structureModel->isNewRecord;
@@ -96,8 +96,8 @@ class BaseEntityEditAction extends BaseAdminAction
                 if (true === $structureModel->validate()) {
                     if (true === $structureModel->save(false)) {
                         Yii::$app->session->setFlash('success',
-                            Yii::t(StructureModule::TRANSLATION_CATEGORY, '{model} successfully saved!',
-                                ['model' => Yii::t(StructureModule::TRANSLATION_CATEGORY, $entityName)]
+                            Yii::t('dotplant.entity.structure', '{model} successfully saved!',
+                                ['model' => Yii::t('dotplant.entity.structure', $entityName)]
                             )
                         );
                         if (true === $refresh) {
@@ -107,14 +107,14 @@ class BaseEntityEditAction extends BaseAdminAction
                         }
                     } else {
                         Yii::$app->session->setFlash('error',
-                            Yii::t(StructureModule::TRANSLATION_CATEGORY, 'An error occurred while saving {model}!',
-                                ['model' => Yii::t(StructureModule::TRANSLATION_CATEGORY, $entityName)]
+                            Yii::t('dotplant.entity.structure', 'An error occurred while saving {model}!',
+                                ['model' => Yii::t('dotplant.entity.structure', $entityName)]
                             )
                         );
                     }
                 } else {
                     Yii::$app->session->setFlash('warning', Yii::t(
-                        StructureModule::TRANSLATION_CATEGORY,
+                        'dotplant.entity.structure',
                         'Please verify that all fields are filled correctly!'
                     ));
                 }

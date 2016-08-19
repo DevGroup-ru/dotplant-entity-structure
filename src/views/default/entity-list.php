@@ -10,11 +10,11 @@ use yii\helpers\Html;
 use DotPlant\EntityStructure\StructureModule;
 use DevGroup\AdminUtils\Helper;
 
-$this->title = Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Entities');
+$this->title = Yii::t('dotplant.entity.structure', 'Entities');
 $this->params['breadcrumbs'][] = $this->title;
 $buttons = Html::a(
     Icon::show('plus') . '&nbsp'
-    . Yii::t(StructureModule::TRANSLATION_CATEGORY, 'New entity'),
+    . Yii::t('dotplant.entity.structure', 'New entity'),
     ['edit', 'parent_id' => $parentId, 'returnUrl' => Helper::returnUrl()],
     [
         'class' => 'btn btn-success',
@@ -43,7 +43,7 @@ HTML;
         <div class="indreams-pages__list-pages box box-solid">
             <div class="box-header with-border clearfix">
                 <h3 class="box-title pull-left">
-                    <?= Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Entities list') ?>
+                    <?= Yii::t('dotplant.entity.structure', 'Entities list') ?>
                 </h3>
             </div>
             <?= GridView::widget([
@@ -75,7 +75,7 @@ HTML;
                     ],
                     [
                         'attribute' => 'is_active',
-                        'label' => Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Active'),
+                        'label' => Yii::t('dotplant.entity.structure', 'Active'),
                         'content' => function ($data) {
                             return Yii::$app->formatter->asBoolean($data->is_active);
                         },
@@ -94,13 +94,13 @@ HTML;
                                 'url' => 'edit',
                                 'icon' => 'pencil',
                                 'class' => 'btn-info',
-                                'label' => Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Edit'),
+                                'label' => Yii::t('dotplant.entity.structure', 'Edit'),
                             ],
                             [
                                 'url' => 'delete',
                                 'icon' => 'trash-o',
                                 'class' => 'btn-danger',
-                                'label' => Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Delete'),
+                                'label' => Yii::t('dotplant.entity.structure', 'Delete'),
                             ],
                         ],
                     ]

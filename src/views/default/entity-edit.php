@@ -10,12 +10,12 @@ use dmstr\widgets\Alert;
 use yii\helpers\ArrayHelper;
 
 $this->title = empty($model->id)
-    ? Yii::t(StructureModule::TRANSLATION_CATEGORY, 'New entity')
-    : Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Edit entity #{id}', ['id' => $model->id]);
+    ? Yii::t('dotplant.entity.structure', 'New entity')
+    : Yii::t('dotplant.entity.structure', 'Edit entity #{id}', ['id' => $model->id]);
 
 $this->params['breadcrumbs'][] = [
     'url' => ['index'],
-    'label' => Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Entities management')
+    'label' => Yii::t('dotplant.entity.structure', 'Entities management')
 ];
 $this->params['breadcrumbs'][] = $this->title;
 $contexts = ArrayHelper::map(Context::find()->all(), 'id', 'name');
@@ -33,13 +33,13 @@ $form = \yii\bootstrap\ActiveForm::begin([
         <ul class="nav nav-tabs">
             <li class="active">
                 <a href="#page-data" data-toggle="tab" aria-expanded="true">
-                    <?= Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Main options') ?>
+                    <?= Yii::t('dotplant.entity.structure', 'Main options') ?>
                 </a>
             </li>
             <?php if (false === $model->isNewRecord) : ?>
                 <li class="">
                     <a href="#page-properties" data-toggle="tab" aria-expanded="false">
-                        <?= Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Entity properties') ?>
+                        <?= Yii::t('dotplant.entity.structure', 'Entity properties') ?>
                     </a>
                 </li>
             <?php endif; ?>
@@ -92,7 +92,7 @@ $form = \yii\bootstrap\ActiveForm::begin([
                 <div class="col-sm-12">
                     <div class="btn-group pull-right" role="group" aria-label="Edit buttons">
                         <button type="submit" class="btn btn-success pull-right">
-                            <?= Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Save') ?>
+                            <?= Yii::t('dotplant.entity.structure', 'Save') ?>
                         </button>
                     </div>
                 </div>

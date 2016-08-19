@@ -64,8 +64,8 @@ class StructureTranslation extends ActiveRecord
     protected function getAttributeLabels()
     {
         return [
-            'is_active' => Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Is Active'),
-            'name' => Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Name'),
+            'is_active' => Yii::t('dotplant.entity.structure', 'Is Active'),
+            'name' => Yii::t('dotplant.entity.structure', 'Name'),
         ];
     }
 
@@ -110,7 +110,7 @@ class StructureTranslation extends ActiveRecord
             $isset = $query->scalar();
             if (false !== $isset) {
                 $this->addError('slug', Yii::t(
-                    StructureModule::TRANSLATION_CATEGORY,
+                    'dotplant.entity.structure',
                     'Value \'{value}\' already in use, please, choose another!',
                     ['value' => $this->slug]
                 ));

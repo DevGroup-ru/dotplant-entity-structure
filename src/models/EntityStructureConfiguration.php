@@ -46,8 +46,8 @@ class EntityStructureConfiguration extends BaseConfigurationModel
     public function attributeLabels()
     {
         return [
-            'defaultPageSize' => Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Default Items Per Page'),
-            'showHiddenInTree' => Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Show Hidden Records In Tree'),
+            'defaultPageSize' => Yii::t('dotplant.entity.structure', 'Default Items Per Page'),
+            'showHiddenInTree' => Yii::t('dotplant.entity.structure', 'Show Hidden Records In Tree'),
         ];
     }
 
@@ -76,7 +76,7 @@ class EntityStructureConfiguration extends BaseConfigurationModel
             'components' => [
                 'i18n' => [
                     'translations' => [
-                        StructureModule::TRANSLATION_CATEGORY => [
+                        'dotplant.entity.structure' => [
                             'class' => 'yii\i18n\PhpMessageSource',
                             'basePath' => dirname(__DIR__) . DIRECTORY_SEPARATOR . 'messages',
                         ]

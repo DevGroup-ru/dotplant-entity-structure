@@ -31,19 +31,19 @@ class BaseEntityRestoreAction extends BaseAdminAction
     {
         if (true === empty($this->entityClass)) {
             throw new InvalidConfigException(
-                Yii::t(StructureModule::TRANSLATION_CATEGORY, "The 'entityClass' param must be set!")
+                Yii::t('dotplant.entity.structure', "The 'entityClass' param must be set!")
             );
         }
         $entityClass = $this->entityClass;
         if (false === is_subclass_of($entityClass, BaseStructure::class)) {
             throw new InvalidConfigException(Yii::t(
-                StructureModule::TRANSLATION_CATEGORY,
+                'dotplant.entity.structure',
                 "The 'entityClass' must extend 'DotPlant\\EntityStructure\\models\\BaseStructure'!"
             ));
         }
         if (false === method_exists($entityClass, 'restore')) {
             throw new InvalidCallException(Yii::t(
-                StructureModule::TRANSLATION_CATEGORY,
+                'dotplant.entity.structure',
                 "The 'entityClass' must use 'DevGroup\\Entity\\traits\\SoftDeleteTrait'!"
             ));
         }
@@ -63,19 +63,19 @@ class BaseEntityRestoreAction extends BaseAdminAction
             true,
             86400,
             new NotFoundHttpException(Yii::t(
-                StructureModule::TRANSLATION_CATEGORY,
+                'dotplant.entity.structure',
                 'Record with id {id} not found!',
                 ['id' => $id]
             ))
         );
         if (true === $model->restore()) {
             Yii::$app->session->setFlash('info', Yii::t(
-                StructureModule::TRANSLATION_CATEGORY,
+                'dotplant.entity.structure',
                 'Record has been successfully restored.'
             ));
         } else {
             Yii::$app->session->setFlash('warning', Yii::t(
-                StructureModule::TRANSLATION_CATEGORY,
+                'dotplant.entity.structure',
                 'An error occurred Item has not been restored.'
             ));
         }

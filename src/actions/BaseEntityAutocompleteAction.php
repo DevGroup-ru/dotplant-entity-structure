@@ -38,17 +38,17 @@ class BaseEntityAutocompleteAction extends BaseAdminAction
     public function init()
     {
         if (false === Yii::$app->request->isAjax) {
-            throw new NotFoundHttpException(Yii::t(StructureModule::TRANSLATION_CATEGORY, 'Page not found'));
+            throw new NotFoundHttpException(Yii::t('dotplant.entity.structure', 'Page not found'));
         }
         if (true === empty($this->entityClass)) {
             throw new InvalidConfigException(
-                Yii::t(StructureModule::TRANSLATION_CATEGORY, "The 'entityClass' param must be set!")
+                Yii::t('dotplant.entity.structure', "The 'entityClass' param must be set!")
             );
         }
         $entityClass = $this->entityClass;
         if (false === is_subclass_of($entityClass, BaseStructure::class)) {
             throw new InvalidConfigException(Yii::t(
-                StructureModule::TRANSLATION_CATEGORY,
+                'dotplant.entity.structure',
                 "The 'entityClass' must extend 'DotPlant\\EntityStructure\\models\\BaseStructure'!"
             ));
         }
@@ -58,7 +58,7 @@ class BaseEntityAutocompleteAction extends BaseAdminAction
             if (false === empty($notFound)) {
                 throw new InvalidConfigException(
                     Yii::t(
-                        StructureModule::TRANSLATION_CATEGORY,
+                        'dotplant.entity.structure',
                         'The following columns \'{columns}\' are not found in database table!',
                         ['columns' => implode(', ', $notFound)]
                     )

@@ -41,13 +41,13 @@ class BaseEntityTreeMoveAction extends BaseAdminAction
     {
         if (true === empty($this->className)) {
             throw new InvalidConfigException(
-                Yii::t(StructureModule::TRANSLATION_CATEGORY, "The 'className' param must be set!")
+                Yii::t('dotplant.entity.structure', "The 'className' param must be set!")
             );
         }
         $className = $this->className;
         if (false === is_subclass_of($className, BaseStructure::class)) {
             throw new InvalidConfigException(Yii::t(
-                StructureModule::TRANSLATION_CATEGORY,
+                'dotplant.entity.structure',
                 "The 'className' must extend 'DotPlant\\EntityStructure\\models\\BaseStructure'!"
             ));
         }

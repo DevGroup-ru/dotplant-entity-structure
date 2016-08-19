@@ -28,13 +28,13 @@ class BaseEntityListAction extends BaseAdminAction
     {
         if (true === empty($this->entityClass)) {
             throw new InvalidConfigException(
-                Yii::t(StructureModule::TRANSLATION_CATEGORY, "The 'entityClass' param must be set!")
+                Yii::t('dotplant.entity.structure', "The 'entityClass' param must be set!")
             );
         }
         $entityClass = $this->entityClass;
         if (false === is_subclass_of($entityClass, BaseStructure::class)) {
             throw new InvalidConfigException(Yii::t(
-                StructureModule::TRANSLATION_CATEGORY,
+                'dotplant.entity.structure',
                 "The 'entityClass' must extend {class}!",
                 ['class' => 'DotPlant\\EntityStructure\\models\\BaseStructure']
             ));
