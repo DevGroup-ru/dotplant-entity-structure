@@ -13,20 +13,9 @@ use Yii;
  */
 class EntityStructureConfiguration extends BaseConfigurationModel
 {
-    /**
-     * @param array $config
-     */
-    public function __construct($config = [])
+    public function getModuleClassName()
     {
-        $attributes = [
-            'defaultPageSize',
-            'showHiddenInTree'
-        ];
-        parent::__construct($attributes, $config);
-        /** @var StructureModule $module */
-        $module = StructureModule::module();
-        $this->defaultPageSize = $module->defaultPageSize;
-        $this->showHiddenInTree = $module->showHiddenInTree;
+        return StructureModule::className();
     }
 
     /**
