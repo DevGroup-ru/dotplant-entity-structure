@@ -59,6 +59,9 @@ class BaseEntityTreeAction extends Action
      */
     public $cacheLifeTime = 86400;
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function init()
     {
         if (true === empty($this->className)) {

@@ -6,7 +6,6 @@ use DevGroup\AdminUtils\actions\BaseAdminAction;
 use DevGroup\TagDependencyHelper\NamingHelper;
 use DotPlant\EntityStructure\models\BaseStructure;
 use DotPlant\EntityStructure\models\StructureTranslation;
-use DotPlant\EntityStructure\StructureModule;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\base\InvalidParamException;

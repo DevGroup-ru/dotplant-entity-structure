@@ -4,7 +4,6 @@ namespace DotPlant\EntityStructure\actions;
 
 use DevGroup\AdminUtils\actions\BaseAdminAction;
 use DotPlant\EntityStructure\models\BaseStructure;
-use DotPlant\EntityStructure\StructureModule;
 use yii\base\InvalidConfigException;
 use Yii;
 

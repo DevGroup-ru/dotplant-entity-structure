@@ -6,7 +6,6 @@ use DevGroup\AdminUtils\actions\BaseAdminAction;
 use DotPlant\EntityStructure\models\BaseStructure;
 use DotPlant\EntityStructure\models\Entity;
 use DotPlant\EntityStructure\models\StructureTranslation;
-use DotPlant\EntityStructure\StructureModule;
 use yii\base\InvalidConfigException;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;

@@ -21,7 +21,8 @@
 
  - набор миграций, создающих основные таблицы `dotplant_structure`, `dotplant_entity`, `dotplant_structure_translation`; 
  - набор базовых экшенов, которые предоставляют функционал создания, редактирования, удаления, 
- сборки данных для `jstree` дерева и поиска с автодополнением по базовым полям сущностей;
+ сборки данных для `jstree` дерева и поиска с автодополнением по базовым полям сущностей.
+ Если этот параметр опустить, никаких проверок доступа производиться не будет.
  - набор файлов представления по умолчанию для отображения и редактирвоания сущностей;
  
 ### Настройки расшерения
@@ -128,6 +129,25 @@ return [
 Далее, чтобы модель заработала и создались необходимые дополнительные таблицы, нужно создать миграцию, примерно следующего содержания.
 
 ```php
+private static $permissionsConfig = [
+     'TicketsManager' => [
+         'descr' => 'Tickets Management Role',
+         'permits' => [
+             'dotplant-tickets-view' => 'Viewing Tickets',
+             'dotplant-tickets-edit' => 'Editing Tickets',
+         ]
+     ],
+     'TicketsAdministrator' => [
+         'descr' => 'Tickets Administrator',
+         'permits' => [
+             'dotplant-tickets-delete' => 'Deleting Tickets'
+         ],
+         'roles' => [
+             'TicketsManager'
+         ],
+     ],
+    ];
+
 public function up()
     {
         /*
@@ -151,10 +171,7 @@ public function up()
         /* 
         Создаем роль для системы контроля доступа, чтобы только пользователи с соответствующей ролью могли управлять записями создаваемой сущности 
         */
-        $auth = Yii::$app->authManager;
-        $permission = $auth->createPermission('tickets-manage');
-        $permission->description = 'Tickets manage permission';
-        $auth->add($permission);
+        \app\helpers\PermissionsHelper::createPermissions(self::$permissionsConfig);
     }
 
     public function down()
@@ -167,11 +184,7 @@ public function up()
             ]
         );
         PropertiesTableGenerator::getInstance()->drop(Ticket::class);
-        $auth = Yii::$app->authManager;
-        $permission = $auth->getPermission('tickets-manage');
-        if (null !== $permission) {
-            $auth->remove($permission);
-        }
+        \app\helpers\PermissionsHelper::removePermissions(self::$permissionsConfig);
     }
 ```
 Следует помнить, что руками данную миграцию выполнять не нужно! Она будет выполнена автоматически при активации расширения в менеджере расширений.
@@ -180,7 +193,7 @@ public function up()
 Согласно [правилам оформления кода](https://github.com/DevGroup-ru/code-style), назовем его `TicketsManageController`
 
 ```php
-class PagesManageController extends BaseController
+class TicketsManageController extends BaseController
 {
     /* Подключаем стандтартные поведения для разграничения прав доступа. Помним, что мы создали специальное разрешение
     'tickets-manage', имея которое, пользователи имеют право управлять записями */
@@ -192,8 +205,23 @@ class PagesManageController extends BaseController
                 'rules' => [
                     [
                         'allow' => true,
-                        'roles' => ['tickets-manage'],
+                        'actions' => ['index'],
+                        'roles' => ['dotplant-tickets-view'],
                     ],
+                    [
+                        'allow' => true,
+                        'actions' => ['edit'],
+                        'roles' => ['dotplant-tickets-edit'],
+                    ],
+                    [
+                        'allow' => true,
+                        'actions' => ['delete'],
+                        'roles' => ['dotplant-tickets-delete'],
+                    ],                    
+                    [
+                        'allow' => false,
+                        'roles' => ['*']
+                    ]
                 ],
             ],
             'verbs' => [
@@ -218,6 +246,7 @@ class PagesManageController extends BaseController
                 'class' => BaseEntityEditAction::class,
                 'entityClass' => Tickets::class,  //обязательный параметр. Класс сущности, которой будем управлять
                 'viewFile' => '@DotPlant/Content/views/pages-manage/edit'  //файл представления. Если есть свой. Если не задать будет использован стандартный
+                'permission' => 'dotplan-tickets-edit' //разрешение для проверки прав доступа к действию
             ],
             'autocomplete' => [ //экшн для поиска с автодополнением (используется, например, для поиска родителя записи)
                 'class' => BaseEntityAutocompleteAction::class,
@@ -250,6 +279,12 @@ class PagesManageController extends BaseController
     }
 }
 ```
+
+Обратите внимание, что экшн `BaseEntityEditAction::class` имеет дополнительную настройку - `permission`. 
+Это название разрешения, которым должен обладать пользователь, чтобы иметь возможность редактировать (читай, сохранять изменения) записи.
+По умолчанию, просмотр формы редактирования записи доступен даже с разрешение для просмотра, а дополнительное разрешение позволяет ограничивать круг тех, 
+кому можно сохранять изменения.
+Если эту настроку не указать, то сохранять можно будет всем, кого вы указали в списке доступа к экшену редактирования.
 
 Теперь, после установки и активации созданного расширения управление записями будет доступно по пути `/tickets/tickets-manage`
 

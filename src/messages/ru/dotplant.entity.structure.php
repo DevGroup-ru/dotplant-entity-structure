@@ -25,6 +25,7 @@ return [
     'New entity' => 'Новый элемент',
     'Page not found' => 'Страница не найдена',
     'Parent ID' => 'ID родителя',
+    'Parameter \'permission\' must be a string!' => 'Параметр \'permission\' должен быть строкой!',
     'Please verify that all fields are filled correctly!' => 'Пожалуйста, проверьте, чтобы все поля были корректно заполнены!',
     'Record has been successfully deleted.' => 'Запись была успешно удалена.',
     'Record has been successfully hidden.' => 'Запись была успешно скрыта.',

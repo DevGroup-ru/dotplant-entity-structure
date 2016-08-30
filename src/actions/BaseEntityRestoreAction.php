@@ -5,7 +5,6 @@ namespace DotPlant\EntityStructure\actions;
 use DevGroup\AdminUtils\actions\BaseAdminAction;
 use DevGroup\Entity\traits\SoftDeleteTrait;
 use DotPlant\EntityStructure\models\BaseStructure;
-use DotPlant\EntityStructure\StructureModule;
 use yii\base\InvalidCallException;
 use yii\base\InvalidConfigException;
 use Yii;

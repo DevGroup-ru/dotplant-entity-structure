@@ -8,11 +8,10 @@ use DevGroup\DataStructure\traits\PropertiesTrait;
 use DevGroup\Multilingual\behaviors\MultilingualActiveRecord;
 use DevGroup\TagDependencyHelper\TagDependencyTrait;
 use DotPlant\EntityStructure\models\BaseStructure;
-use DotPlant\EntityStructure\models\StructureTranslation;
-use DotPlant\EntityStructure\StructureModule;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\StringHelper;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 
 /**
@@ -33,10 +32,22 @@ class BaseEntityEditAction extends BaseAdminAction
     public $viewFile = '@DotPlant/EntityStructure/views/default/entity-edit';
 
     /**
+     * Permission name to be checked for providing access to action
+     *
+     * @var string
+     */
+    public $permission = '';
+
+    /**
      * @inheritdoc
      */
     public function init()
     {
+        if (false === is_string($this->permission)) {
+            throw new InvalidConfigException(
+                Yii::t('dotplant.entity.structure', "Parameter 'permission' must be a string!")
+            );
+        }
         if (true === empty($this->entityClass)) {
             throw new InvalidConfigException(
                 Yii::t('dotplant.entity.structure', "The 'entityClass' param must be set!")
@@ -83,7 +94,14 @@ class BaseEntityEditAction extends BaseAdminAction
         $structureModel->autoSaveProperties = true;
         $post = Yii::$app->request->post();
         $structureModel->entity_id = $structureModel->getEntityId();
+        $canSave = true;
+        if (false === empty($this->permission) && false === Yii::$app->user->can($this->permission)) {
+            $canSave = false;
+        }
         if (false === empty($post)) {
+            if (false === $canSave) {
+                throw new ForbiddenHttpException(Yii::t('yii', 'You are not allowed to perform this action.'));
+            }
             if (true === $structureModel->load($post)) {
                 foreach (Yii::$app->request->post('StructureTranslation', []) as $language => $data) {
                     $data['parentContextId'] = (int)$structureModel->context_id;
@@ -124,6 +142,7 @@ class BaseEntityEditAction extends BaseAdminAction
             $this->viewFile,
             [
                 'model' => $structureModel,
+                'canSave' => $canSave
             ]
         );
     }
