@@ -3,8 +3,11 @@
 namespace DotPlant\EntityStructure\models;
 
 
+use DevGroup\DataStructure\behaviors\PackedJsonAttributes;
 use DevGroup\Entity\traits\EntityTrait;
 use DevGroup\Entity\traits\SeoTrait;
+use DevGroup\TagDependencyHelper\CacheableActiveRecord;
+use DevGroup\TagDependencyHelper\TagDependencyTrait;
 use DotPlant\EntityStructure\StructureModule;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
@@ -36,6 +39,7 @@ class StructureTranslation extends ActiveRecord
 {
     use EntityTrait;
     use SeoTrait;
+    use TagDependencyTrait;
 
     /** @var int field to detect necessity of url recompiling */
     public $parentParentId;
@@ -59,7 +63,18 @@ class StructureTranslation extends ActiveRecord
         ['name', 'string', 'max' => 255],
         ['name', 'required'],
         ['url', 'validateUrl', 'skipOnEmpty' => false, 'skipOnError' => false],
+
     ];
+
+    public function behaviors()
+    {
+        return [
+
+            'CacheableActiveRecord' => [
+                'class' => CacheableActiveRecord::class,
+            ],
+        ];
+    }
 
     protected function getAttributeLabels()
     {

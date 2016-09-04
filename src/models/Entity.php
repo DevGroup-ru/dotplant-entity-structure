@@ -2,6 +2,8 @@
 
 namespace DotPlant\EntityStructure\models;
 
+use DevGroup\TagDependencyHelper\CacheableActiveRecord;
+use DevGroup\TagDependencyHelper\TagDependencyTrait;
 use DotPlant\EntityStructure\StructureModule;
 use yii\base\InvalidParamException;
 use yii\db\ActiveRecord;
@@ -12,12 +14,14 @@ use Yii;
  *
  * @property integer $id
  * @property string $name
+ * @property string $route
  * @property string $class_name
  *
  * @property BaseStructure[] $structure
  */
 class Entity extends ActiveRecord
 {
+    use TagDependencyTrait;
     /** @var array */
     private static $classMap = [];
 
@@ -32,11 +36,24 @@ class Entity extends ActiveRecord
     /**
      * @inheritdoc
      */
+    public function behaviors()
+    {
+        return [
+            'CacheableActiveRecord' => [
+                'class' => CacheableActiveRecord::class,
+            ],
+        ];
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function rules()
     {
         return [
             [['name', 'class_name'], 'required'],
             [['name'], 'string', 'max' => 100],
+            [['route'], 'string', 'max' => 100],
             [['class_name'], 'string', 'max' => 255],
             [
                 ['id'],
@@ -56,6 +73,7 @@ class Entity extends ActiveRecord
         return [
             'id' => Yii::t('dotplant.entity.structure', 'ID'),
             'name' => Yii::t('dotplant.entity.structure', 'Name'),
+            'route' => Yii::t('dotplant.entity.structure', 'Route'),
             'class_name' => Yii::t('dotplant.entity.structure', 'Class Name'),
         ];
     }

@@ -17,7 +17,8 @@
     "devgroup/yii2-entity": "*",
     "devgroup/yii2-multilingual": "*",
     "devgroup/yii2-data-structure-tools": "*",
-    "devgroup/yii2-admin-utils": "dev-master"
+    "devgroup/yii2-admin-utils": "dev-master",
+    "yii2tech/ar-role": "^1.0"
   },
   "require-dev": {
     "yiisoft/yii2-codeception": "~2.0.0",

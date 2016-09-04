@@ -3,13 +3,13 @@
 namespace DotPlant\EntityStructure\models;
 
 use DevGroup\DataStructure\behaviors\HasProperties;
-use DevGroup\DataStructure\behaviors\PackedJsonAttributes;
 use DevGroup\DataStructure\traits\PropertiesTrait;
 use DevGroup\Multilingual\behaviors\MultilingualActiveRecord;
 use DevGroup\Multilingual\traits\MultilingualTrait;
 use DevGroup\TagDependencyHelper\CacheableActiveRecord;
 use DevGroup\TagDependencyHelper\TagDependencyTrait;
 use DotPlant\EntityStructure\StructureModule;
+use yii\caching\TagDependency;
 use yii\data\ActiveDataProvider;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
@@ -46,6 +46,8 @@ class BaseStructure extends ActiveRecord
     /** string this is for base actions translation */
     const TRANSLATION_CATEGORY = 'dotplant.entity.structure';
 
+    protected $entityConfiguration = [];
+
     /**
      * @inheritdoc
      */
@@ -73,7 +75,7 @@ class BaseStructure extends ActiveRecord
     /**
      * @var array
      */
-    private $entitiesMap = [];
+    protected static $entitiesMap;
 
     /**
      * Returns Entity id
@@ -83,17 +85,63 @@ class BaseStructure extends ActiveRecord
      */
     public function getEntityId()
     {
-        if (false === isset($this->entitiesMap[static::class])) {
-            if (false === $entityId = Entity::find()->select('id')->where(['class_name' => static::class])->scalar()) {
-                throw new NotFoundHttpException(Yii::t(
-                    'dotplant.entity.structure',
-                    "Unknown entity '{class}'!",
-                    ['class' => static::class]
-                ));
-            }
-            $this->entitiesMap[static::class] = $entityId;
+        self::entitiesMap();
+        if (false === isset(self::$entitiesMap[static::class])) {
+
+            throw new \Exception(Yii::t(
+                'dotplant.entity.structure',
+                "Unknown entity '{class}'!",
+                ['class' => static::class]
+            ));
         }
-        return (int)$this->entitiesMap[static::class];
+        return (int) self::$entitiesMap[static::class]['id'];
+    }
+
+    public static function entitiesMap()
+    {
+        if (self::$entitiesMap === null) {
+            self::$entitiesMap = Yii::$app->cache->get('Structure:EntitiesMap');
+            if (self::$entitiesMap === false) {
+                self::$entitiesMap = Entity::find()->asArray()->indexBy('class_name')->all();
+                Yii::$app->cache->set(
+                    'Structure:EntitiesMap',
+                    self::$entitiesMap,
+                    86400,
+                    new TagDependency(['tags'=>Entity::commonTag()])
+                );
+            }
+        }
+        return self::$entitiesMap;
+    }
+
+    /**
+     * Table inheritance pattern here.
+     * @inheritdoc
+     */
+    public static function instantiate($row)
+    {
+        $entityId = (int) $row['entity_id'];
+
+        foreach (self::entitiesMap() as $record) {
+            if ($entityId === (int) $record['id']) {
+                $class = Yii::createObject($record['class_name']);
+                $class->setEntityConfiguration($record);
+                return $class;
+            }
+        }
+
+
+        return Yii::createObject(self::class);
+    }
+
+    public function setEntityConfiguration($record)
+    {
+        $this->entityConfiguration = $record;
+    }
+
+    public function getEntityConfiguration()
+    {
+        return $this->entityConfiguration;
     }
 
     /**
@@ -109,9 +157,6 @@ class BaseStructure extends ActiveRecord
             ],
             'CacheableActiveRecord' => [
                 'class' => CacheableActiveRecord::class,
-            ],
-            'PackedJsonAttributes' => [
-                'class' => PackedJsonAttributes::class,
             ],
             'properties' => [
                 'class' => HasProperties::class,
@@ -146,10 +191,15 @@ class BaseStructure extends ActiveRecord
                     ],
                     'integer'
                 ],
+
             ],
-            $this->propertiesRules());
+            $this->propertiesRules()
+        );
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function getAttributeLabels()
     {
         return [
@@ -168,7 +218,7 @@ class BaseStructure extends ActiveRecord
      */
     public function safeAttributes()
     {
-        $t = new StructureTranslation();
+        $t = Yii::createObject($this->getTranslationModelClassName());
         return ArrayHelper::merge(parent::safeAttributes(), $t->safeAttributes());
     }
 
@@ -184,16 +234,13 @@ class BaseStructure extends ActiveRecord
     }
 
     /**
-     * Override Multilingual find method to include unpublished records
+     * @param ActiveQuery $query
      *
-     * @return object
-     * @throws \yii\base\InvalidConfigException
+     * @return ActiveQuery
      */
-    public static function find()
+    public static function applyDefaultScope($query)
     {
-        /** @var ActiveQuery $query */
-        $query = Yii::createObject(ActiveQuery::className(), [get_called_class()]);
-        return $query = $query->innerJoinWith(['defaultTranslation']);
+        return $query;
     }
 
     /**

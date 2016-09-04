@@ -71,8 +71,8 @@ class m160804_083403_init extends Migration
                 'slug' => $this->string(80)->notNull(),
                 'url' => $this->string(800),
                 'is_active' => $this->boolean()->notNull()->defaultValue(true),
-                'packed_json_content' => 'LONGTEXT NOT NULL',
-                'packed_json_providers' => 'LONGTEXT NOT NULL',
+                'packed_json_content' => $this->db->driverName === 'mysql' ? 'LONGTEXT' : $this->text()->notNull(),
+                'packed_json_providers' => $this->db->driverName === 'mysql' ? 'LONGTEXT' : $this->text()->notNull(),
             ],
             $tableOptions
         );
