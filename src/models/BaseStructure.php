@@ -81,7 +81,7 @@ class BaseStructure extends ActiveRecord
      * Returns Entity id
      *
      * @return int
-     * @throws NotFoundHttpException
+     * @throws \Exception
      */
     public function getEntityId()
     {
@@ -97,6 +97,9 @@ class BaseStructure extends ActiveRecord
         return (int) self::$entitiesMap[static::class]['id'];
     }
 
+    /**
+     * @return array|mixed|\yii\db\ActiveRecord[]
+     */
     public static function entitiesMap()
     {
         if (self::$entitiesMap === null) {
@@ -134,6 +137,9 @@ class BaseStructure extends ActiveRecord
         return Yii::createObject(self::class);
     }
 
+    /**
+     * @param $record
+     */
     public function setEntityConfiguration($record)
     {
         $this->entityConfiguration = $record;
@@ -272,7 +278,7 @@ class BaseStructure extends ActiveRecord
         /* @var $query ActiveQuery */
 
         $dataProvider = new ActiveDataProvider([
-            'query' => $query = static::find(),
+            'query' => $query = static::find()->where(['entity_id' => $this->getEntityId()]),
             'pagination' => [
                 'pageSize' => static::getPageSize(),
             ],

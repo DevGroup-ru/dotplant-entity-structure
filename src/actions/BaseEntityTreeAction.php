@@ -4,6 +4,8 @@ namespace DotPlant\EntityStructure\actions;
 
 use DevGroup\Multilingual\models\Context;
 use DevGroup\TagDependencyHelper\NamingHelper;
+use DotPlant\EntityStructure\models\BaseStructure;
+use DotPlant\EntityStructure\models\Entity;
 use Yii;
 use yii\base\Action;
 use yii\base\InvalidConfigException;
@@ -75,18 +77,20 @@ class BaseEntityTreeAction extends Action
     public function run()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
-        /** @var ActiveRecord | string $class */
+        /** @var BaseStructure | string $class */
         $class = $this->className;
         if (null === $current_selected_id = Yii::$app->request->get($this->querySelectedAttribute)) {
             $current_selected_id = Yii::$app->request->get($this->queryParentAttribute);
         }
-        $cacheKey = "AdjacencyFullTreeData:{$this->cacheKey}:{$class}:{$this->querySortOrder}."
+        $entityId = Entity::getEntityIdForClass($class);
+        $cacheKey = "AdjacencyFullTreeData:{$this->cacheKey}:{$class}:{$this->querySortOrder}:{$entityId}"
             . Yii::$app->multilingual->language_id . $this->showHiddenInTree;
 
         if (false === $result = Yii::$app->cache->get($cacheKey)) {
             $contexts = ArrayHelper::map(Context::find()->all(), 'id', 'name');
             /** @var ActiveQuery $query */
             $query = $class::find()
+                ->where(['entity_id' => $entityId])
                 ->orderBy([
                     $this->contextIdAttribute => SORT_ASC,
                     $this->querySortOrder => SORT_ASC

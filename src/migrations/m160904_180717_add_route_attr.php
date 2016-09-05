@@ -1,6 +1,6 @@
 <?php
 
-use DotPlant\EntityStructure\models\BaseStructure;
+use DotPlant\EntityStructure\models\StructureTranslation;
 use DotPlant\EntityStructure\models\Entity;
 use yii\db\Migration;
 
@@ -14,11 +14,11 @@ class m160904_180717_add_route_attr extends Migration
             $this->string()->notNull()->defaultValue('')
         );
         $this->dropColumn(
-            BaseStructure::tableName(),
+            StructureTranslation::tableName(),
             'packed_json_content'
         );
         $this->dropColumn(
-            BaseStructure::tableName(),
+            StructureTranslation::tableName(),
             'packed_json_providers'
         );
     }
@@ -30,12 +30,12 @@ class m160904_180717_add_route_attr extends Migration
             'route'
         );
         $this->addColumn(
-            BaseStructure::tableName(),
+            StructureTranslation::tableName(),
             'packed_json_content',
             $this->db->driverName === 'mysql' ? 'LONGTEXT' : $this->text()->notNull()
         );
         $this->addColumn(
-            BaseStructure::tableName(),
+            StructureTranslation::tableName(),
             'packed_json_providers',
             $this->db->driverName === 'mysql' ? 'LONGTEXT' : $this->text()->notNull()
         );
