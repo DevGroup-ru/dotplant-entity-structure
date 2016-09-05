@@ -6,6 +6,7 @@ use DevGroup\Multilingual\models\Context;
 use DevGroup\TagDependencyHelper\NamingHelper;
 use DotPlant\EntityStructure\models\BaseStructure;
 use DotPlant\EntityStructure\models\Entity;
+use vakata\database\Query;
 use Yii;
 use yii\base\Action;
 use yii\base\InvalidConfigException;
@@ -74,7 +75,7 @@ class BaseEntityTreeAction extends Action
         }
     }
 
-    public function run()
+    public function run($id = null)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         /** @var BaseStructure | string $class */
@@ -82,15 +83,15 @@ class BaseEntityTreeAction extends Action
         if (null === $current_selected_id = Yii::$app->request->get($this->querySelectedAttribute)) {
             $current_selected_id = Yii::$app->request->get($this->queryParentAttribute);
         }
-        $entityId = Entity::getEntityIdForClass($class);
-        $cacheKey = "AdjacencyFullTreeData:{$this->cacheKey}:{$class}:{$this->querySortOrder}:{$entityId}"
+        $cacheKey = "AdjacencyFullTreeData:{$this->cacheKey}:{$class}:{$this->querySortOrder}:{$id}"
             . Yii::$app->multilingual->language_id . $this->showHiddenInTree;
 
         if (false === $result = Yii::$app->cache->get($cacheKey)) {
             $contexts = ArrayHelper::map(Context::find()->all(), 'id', 'name');
             /** @var ActiveQuery $query */
+            $parentId = ('#' == $id) ? null : $id;
             $query = $class::find()
-                ->where(['entity_id' => $entityId])
+                ->where(['parent_id' => $parentId])
                 ->orderBy([
                     $this->contextIdAttribute => SORT_ASC,
                     $this->querySortOrder => SORT_ASC
@@ -112,6 +113,16 @@ class BaseEntityTreeAction extends Action
                 self::treeGoDown($id, $rows, $hidden);
             }
             foreach ($rows as $row) {
+                if ((int)$row['expand_in_tree'] === 1) {
+                    $c = (new \yii\db\Query())
+                        ->from(BaseStructure::tableName())
+                        ->where(['parent_id' => $row['id']])
+                        ->select('id')
+                        ->count();
+                    $children = $c > 0;
+                } else {
+                    $children = false;
+                }
                 $item = [];
                 if (true === in_array($row[$this->modelIdAttribute], $hidden)) {
                     if (true === $this->showHiddenInTree) {
@@ -128,6 +139,7 @@ class BaseEntityTreeAction extends Action
                     'id' => $row[$this->modelIdAttribute],
                     'parent' => ($row[$this->modelParentAttribute] > 0) ? $row[$this->modelParentAttribute] : '#',
                     'text' => $text,
+                    'children' => $children,
                     'a_attr' => [
                         'data-id' => $row[$this->modelIdAttribute],
                         'data-parent_id' => $row[$this->modelParentAttribute],
