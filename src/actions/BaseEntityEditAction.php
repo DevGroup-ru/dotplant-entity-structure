@@ -109,8 +109,8 @@ class BaseEntityEditAction extends BaseAdminAction
                 unset($translationClass);
 
                 foreach ($translations as $language => $data) {
-                    $data['parentContextId'] = (int)$structureModel->context_id;
-                    $data['parentParentId'] = (int)$structureModel->parent_id;
+                    $data['parentContextId'] = (int) $structureModel->context_id;
+                    $data['parentParentId'] = (int) $structureModel->parent_id;
                     $structureModel->translate($language)->oldSlug = $structureModel->translate($language)->slug;
                     foreach ($data as $attribute => $translation) {
                         $structureModel->translate($language)->$attribute = $translation;

@@ -35,7 +35,8 @@ use yii\web\NotFoundHttpException;
  * @property Entity $entity
  * @property BaseStructure $parent
  * @property BaseStructure[] $children
- * @property StructureTranslation[] $structureTranslations
+ * @property StructureTranslation $defaultTranslation
+ * @property StructureTranslation[] $translations
  */
 class BaseStructure extends ActiveRecord
 {
