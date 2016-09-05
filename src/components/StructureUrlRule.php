@@ -49,9 +49,9 @@ class StructureUrlRule extends Object implements UrlRuleInterface
                     ->andWhere([
                         'parent_id' => $structure === null ? null : $structure->id
                     ])
-//                    ->select([
-//                        'id',
-//                    ])
+                    ->select([
+                        'id',
+                    ])
                     ->one();
 
                 if ($structure === null) {
