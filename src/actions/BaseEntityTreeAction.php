@@ -5,15 +5,13 @@ namespace DotPlant\EntityStructure\actions;
 use DevGroup\Multilingual\models\Context;
 use DevGroup\TagDependencyHelper\NamingHelper;
 use DotPlant\EntityStructure\models\BaseStructure;
-use DotPlant\EntityStructure\models\Entity;
-use vakata\database\Query;
 use Yii;
 use yii\base\Action;
-use yii\base\InvalidConfigException;
 use yii\caching\TagDependency;
 use yii\db\ActiveQuery;
-use yii\db\ActiveRecord;
+use yii\db\Query;
 use yii\helpers\ArrayHelper;
+use yii\web\ForbiddenHttpException;
 use yii\web\Response;
 
 /**
@@ -44,6 +42,7 @@ class BaseEntityTreeAction extends Action
     public $contextIdAttribute = 'context_id';
 
     public $showHiddenInTree = null;
+
     /**
      * Additional conditions for retrieving tree(ie. don't display nodes marked as deleted)
      * @var array
@@ -63,34 +62,30 @@ class BaseEntityTreeAction extends Action
     public $cacheLifeTime = 86400;
 
     /**
-     * @throws InvalidConfigException
+     * @param null $id
+     * @return array
+     * @throws ForbiddenHttpException
      */
-    public function init()
-    {
-        if (true === empty($this->className)) {
-            throw new InvalidConfigException("Model name should be set in controller actions");
-        }
-        if (false === class_exists($this->className)) {
-            throw new InvalidConfigException("Model class does not exists");
-        }
-    }
-
     public function run($id = null)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
+        if (false === Yii::$app->user->can('backend-view')) {
+            throw new ForbiddenHttpException(Yii::t(
+                'yii', 'You are not allowed to perform this action.'
+            ));
+        }
         /** @var BaseStructure | string $class */
-        $class = $this->className;
         if (null === $current_selected_id = Yii::$app->request->get($this->querySelectedAttribute)) {
             $current_selected_id = Yii::$app->request->get($this->queryParentAttribute);
         }
-        $cacheKey = "AdjacencyFullTreeData:{$this->cacheKey}:{$class}:{$this->querySortOrder}:{$id}"
+        $cacheKey = "AdjacencyFullTreeData:{$this->cacheKey}:{$this->querySortOrder}:{$id}"
             . Yii::$app->multilingual->language_id . $this->showHiddenInTree;
 
         if (false === $result = Yii::$app->cache->get($cacheKey)) {
             $contexts = ArrayHelper::map(Context::find()->all(), 'id', 'name');
             /** @var ActiveQuery $query */
             $parentId = ('#' == $id) ? null : $id;
-            $query = $class::find()
+            $query = BaseStructure::find()
                 ->where(['parent_id' => $parentId])
                 ->orderBy([
                     $this->contextIdAttribute => SORT_ASC,
@@ -107,14 +102,14 @@ class BaseEntityTreeAction extends Action
 
             $result = [];
             $hidden = [];
-            $roots = $class::find()->select(['id'])->where(['is_deleted' => 1])->column();
+            $roots = BaseStructure::find()->select(['id'])->where(['is_deleted' => 1])->column();
             $hidden += $roots;
             foreach ($roots as $id) {
                 self::treeGoDown($id, $rows, $hidden);
             }
             foreach ($rows as $row) {
                 if ((int)$row['expand_in_tree'] === 1) {
-                    $c = (new \yii\db\Query())
+                    $c = (new Query())
                         ->from(BaseStructure::tableName())
                         ->where(['parent_id' => $row['id']])
                         ->select('id')
@@ -144,6 +139,7 @@ class BaseEntityTreeAction extends Action
                         'data-id' => $row[$this->modelIdAttribute],
                         'data-parent_id' => $row[$this->modelParentAttribute],
                         'data-context_id' => $row[$this->contextIdAttribute],
+                        'data-entity_id' => $row['entity_id'],
                     ],
                 ];
                 if (null !== $this->varyByTypeAttribute) {
@@ -159,7 +155,7 @@ class BaseEntityTreeAction extends Action
                 86400,
                 new TagDependency([
                     'tags' => [
-                        NamingHelper::getCommonTag($class),
+                        NamingHelper::getCommonTag(BaseStructure::class),
                     ],
                 ])
             );

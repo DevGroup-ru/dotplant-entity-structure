@@ -3,9 +3,12 @@
 namespace DotPlant\EntityStructure\actions;
 
 use DevGroup\AdminUtils\actions\BaseAdminAction;
+use DevGroup\TagDependencyHelper\NamingHelper;
 use DotPlant\EntityStructure\models\BaseStructure;
-use yii\base\InvalidConfigException;
+use DotPlant\EntityStructure\models\Entity;
 use Yii;
+use yii\caching\TagDependency;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 
 /**
@@ -15,38 +18,18 @@ use yii\web\NotFoundHttpException;
  */
 class BaseEntityDeleteAction extends BaseAdminAction
 {
-    /** @var  BaseStructure */
-    public $entityClass;
-
-    /** @var  array custom route to redirect to */
-    public $redirectUrl;
-
     /**
      * @inheritdoc
      */
-    public function init()
+    public function run($id, $returnUrl = '', $hard = null, $entity_id)
     {
-        if (true === empty($this->entityClass)) {
-            throw new InvalidConfigException(
-                Yii::t('dotplant.entity.structure', "The 'entityClass' param must be set!")
-            );
+        $entityClass = Entity::getEntityClassForId($entity_id);
+        $permissions = $entityClass::getAccessRules();
+        if (true === isset($permissions['delete'])) {
+            if (false === Yii::$app->user->can($permissions['delete'])) {
+                throw new ForbiddenHttpException(Yii::t('yii', 'You are not allowed to perform this action.'));
+            }
         }
-        $entityClass = $this->entityClass;
-        if (false === is_subclass_of($entityClass, BaseStructure::class)) {
-            throw new InvalidConfigException(Yii::t(
-                'dotplant.entity.structure',
-                "The 'entityClass' must extend 'DotPlant\\EntityStructure\\models\\BaseStructure'!"
-            ));
-        }
-        parent::init();
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function run($id, $returnUrl = '', $hard = null)
-    {
-        $entityClass = $this->entityClass;
         /** @var BaseStructure $model */
         $model = $entityClass::loadModel(
             $id,
@@ -98,9 +81,11 @@ class BaseEntityDeleteAction extends BaseAdminAction
                 );
             }
         }
-        $returnUrl = empty($this->redirectUrl)
-            ? (empty($returnUrl) ? 'index' : $returnUrl)
-            : $this->redirectUrl;
+        TagDependency::invalidate(
+            Yii::$app->cache,
+            NamingHelper::getCommonTag(BaseStructure::class)
+        );
+        $returnUrl = empty($returnUrl) ? 'index' : $returnUrl;
         return $this->controller->redirect($returnUrl);
     }
 }

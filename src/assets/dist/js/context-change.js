@@ -36,6 +36,5 @@ var DPStructure = window.DPStructure || {};
             }
         }
     };
-
 })(jQuery);
 

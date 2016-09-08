@@ -3,9 +3,9 @@
 namespace DotPlant\EntityStructure\actions;
 
 use DevGroup\AdminUtils\actions\BaseAdminAction;
-use DotPlant\EntityStructure\models\BaseStructure;
-use yii\base\InvalidConfigException;
+use DotPlant\EntityStructure\models\BaseStructureSearch;
 use Yii;
+use yii\web\ForbiddenHttpException;
 
 /**
  * Class BaseEntityListAction
@@ -14,41 +14,21 @@ use Yii;
  */
 class BaseEntityListAction extends BaseAdminAction
 {
-    /** @var  BaseStructure */
-    public $entityClass;
-
     /** @var string View file to render */
     public $viewFile = '@DotPlant/EntityStructure/views/default/entity-list';
 
     /**
      * @inheritdoc
      */
-    public function init()
-    {
-        if (true === empty($this->entityClass)) {
-            throw new InvalidConfigException(
-                Yii::t('dotplant.entity.structure', "The 'entityClass' param must be set!")
-            );
-        }
-        $entityClass = $this->entityClass;
-        if (false === is_subclass_of($entityClass, BaseStructure::class)) {
-            throw new InvalidConfigException(Yii::t(
-                'dotplant.entity.structure',
-                "The 'entityClass' must extend {class}!",
-                ['class' => 'DotPlant\\EntityStructure\\models\\BaseStructure']
-            ));
-        }
-        parent::init();
-    }
-
-    /**
-     * @inheritdoc
-     */
     public function run($id = null, $context_id = null)
     {
-        $entityClass = $this->entityClass;
-        /** @var BaseStructure $searchModel */
-        $searchModel = new $entityClass(['is_active' => '']);
+        if (false === Yii::$app->user->can('backend-view')) {
+            throw new ForbiddenHttpException(Yii::t(
+                'yii', 'You are not allowed to perform this action.'
+            ));
+        }
+        /** @var BaseStructureSearch $searchModel */
+        $searchModel = new BaseStructureSearch(['is_active' => '']);
         if (null !== $id) {
             $searchModel->parent_id = (int)$id;
         }

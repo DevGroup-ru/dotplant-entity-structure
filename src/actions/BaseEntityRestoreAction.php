@@ -4,10 +4,14 @@ namespace DotPlant\EntityStructure\actions;
 
 use DevGroup\AdminUtils\actions\BaseAdminAction;
 use DevGroup\Entity\traits\SoftDeleteTrait;
+use DevGroup\TagDependencyHelper\NamingHelper;
 use DotPlant\EntityStructure\models\BaseStructure;
+use DotPlant\EntityStructure\models\Entity;
 use yii\base\InvalidCallException;
 use yii\base\InvalidConfigException;
 use Yii;
+use yii\caching\TagDependency;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 
 /**
@@ -17,28 +21,17 @@ use yii\web\NotFoundHttpException;
  */
 class BaseEntityRestoreAction extends BaseAdminAction
 {
-    /** @var  BaseStructure */
-    public $entityClass;
-
-    /** @var  array custom route to redirect to */
-    public $redirectUrl;
-
     /**
      * @inheritdoc
      */
-    public function init()
+    public function run($id = null, $returnUrl = '', $entity_id)
     {
-        if (true === empty($this->entityClass)) {
-            throw new InvalidConfigException(
-                Yii::t('dotplant.entity.structure', "The 'entityClass' param must be set!")
-            );
-        }
-        $entityClass = $this->entityClass;
-        if (false === is_subclass_of($entityClass, BaseStructure::class)) {
-            throw new InvalidConfigException(Yii::t(
-                'dotplant.entity.structure',
-                "The 'entityClass' must extend 'DotPlant\\EntityStructure\\models\\BaseStructure'!"
-            ));
+        $entityClass = Entity::getEntityClassForId($entity_id);
+        $permissions = $entityClass::getAccessRules();
+        if (true === isset($permissions['delete'])) {
+            if (false === Yii::$app->user->can($permissions['delete'])) {
+                throw new ForbiddenHttpException(Yii::t('yii', 'You are not allowed to perform this action.'));
+            }
         }
         if (false === method_exists($entityClass, 'restore')) {
             throw new InvalidCallException(Yii::t(
@@ -46,15 +39,6 @@ class BaseEntityRestoreAction extends BaseAdminAction
                 "The 'entityClass' must use 'DevGroup\\Entity\\traits\\SoftDeleteTrait'!"
             ));
         }
-        parent::init();
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function run($id = null, $returnUrl = '')
-    {
-        $entityClass = $this->entityClass;
         /** @var BaseStructure | SoftDeleteTrait $model */
         $model = $entityClass::loadModel(
             $id,
@@ -78,6 +62,10 @@ class BaseEntityRestoreAction extends BaseAdminAction
                 'An error occurred Item has not been restored.'
             ));
         }
+        TagDependency::invalidate(
+            Yii::$app->cache,
+            NamingHelper::getCommonTag(BaseStructure::class)
+        );
         $returnUrl = empty($this->redirectUrl)
             ? (empty($returnUrl) ? 'index' : $returnUrl)
             : $this->redirectUrl;

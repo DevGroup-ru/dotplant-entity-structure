@@ -73,7 +73,7 @@ class EntityStructureConfiguration extends BaseConfigurationModel
                 ],
             ],
             'modules' => [
-                'entityStructure' => [
+                'structure' => [
                     'class' => StructureModule::class,
                     'defaultPageSize' => $this->defaultPageSize,
                     'showHiddenInTree' => (bool)$this->showHiddenInTree

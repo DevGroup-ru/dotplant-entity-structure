@@ -16,7 +16,7 @@ class StructureUrlRule extends Object implements UrlRuleInterface
      * Parses the given request and returns the corresponding route and parameters.
      *
      * @param UrlManager $manager the URL manager
-     * @param Request    $request the request component
+     * @param Request $request the request component
      *
      * @return array|boolean the parsing result. The route and the parameters are returned as an array.
      * If false, it means this rule cannot be used to parse this path info.
@@ -59,11 +59,12 @@ class StructureUrlRule extends Object implements UrlRuleInterface
                     return false;
                 }
             }
+//TODO get to the bottom and implement
+//            $conf = $structure->getEntityConfiguration();
+//            if ($conf === null) {
+            return false;
+//            }
 
-            $conf = $structure->getEntityConfiguration();
-            if ($conf === null) {
-                return false;
-            }
             return [
                 $conf['route'],
                 [
@@ -84,8 +85,8 @@ class StructureUrlRule extends Object implements UrlRuleInterface
      * Creates a URL according to the given route and parameters.
      *
      * @param UrlManager $manager the URL manager
-     * @param string     $route   the route. It should not have slashes at the beginning or the end.
-     * @param array      $params  the parameters
+     * @param string $route the route. It should not have slashes at the beginning or the end.
+     * @param array $params the parameters
      *
      * @return string|boolean the created URL, or false if this rule cannot be used for creating this URL.
      */

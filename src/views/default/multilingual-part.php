@@ -8,9 +8,10 @@
  * @var \DevGroup\Multilingual\models\Language $language
  * @var string $attributePrefix
  */
+use kartik\switchinput\SwitchInput;
 
 ?>
-<?= $form->field($model, $attributePrefix . 'is_active')->checkbox() ?>
+<?= $form->field($model, $attributePrefix . 'is_active')->widget(SwitchInput::class) ?>
 <?= $form->field($model, $attributePrefix . 'name') ?>
 <?= $form->field($model, $attributePrefix . 'title') ?>
 <?= $form->field($model, $attributePrefix . 'h1') ?>

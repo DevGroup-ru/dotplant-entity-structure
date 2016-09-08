@@ -7,6 +7,7 @@ use DotPlant\EntityStructure\models\BaseStructure;
 use DotPlant\EntityStructure\models\Entity;
 use DotPlant\EntityStructure\models\StructureTranslation;
 use yii\base\InvalidConfigException;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\db\Query;
@@ -18,9 +19,6 @@ use Yii;
  */
 class BaseEntityAutocompleteAction extends BaseAdminAction
 {
-    /** @var  BaseStructure */
-    public $entityClass;
-
     /**
      * @var array fields to search against
      */
@@ -39,16 +37,9 @@ class BaseEntityAutocompleteAction extends BaseAdminAction
         if (false === Yii::$app->request->isAjax) {
             throw new NotFoundHttpException(Yii::t('dotplant.entity.structure', 'Page not found'));
         }
-        if (true === empty($this->entityClass)) {
-            throw new InvalidConfigException(
-                Yii::t('dotplant.entity.structure', "The 'entityClass' param must be set!")
-            );
-        }
-        $entityClass = $this->entityClass;
-        if (false === is_subclass_of($entityClass, BaseStructure::class)) {
-            throw new InvalidConfigException(Yii::t(
-                'dotplant.entity.structure',
-                "The 'entityClass' must extend 'DotPlant\\EntityStructure\\models\\BaseStructure'!"
+        if (false === Yii::$app->user->can('backend-view')) {
+            throw new ForbiddenHttpException(Yii::t(
+                'yii', 'You are not allowed to perform this action.'
             ));
         }
         if (false === empty($this->searchFields)) {
@@ -76,7 +67,6 @@ class BaseEntityAutocompleteAction extends BaseAdminAction
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $out = ['results' => ['id' => '', 'text' => '']];
-        $entityId = Entity::getEntityIdForClass($this->entityClass);
         if (null !== $q) {
             $query = new Query;
             $query->select('id, name AS text')
@@ -85,7 +75,6 @@ class BaseEntityAutocompleteAction extends BaseAdminAction
                 ->where($this->prepareCondition($q))
                 ->andWhere([
                     'language_id' => Yii::$app->multilingual->language_id,
-                    'entity_id' => $entityId
                 ])
                 ->limit(20);
             $command = $query->createCommand();

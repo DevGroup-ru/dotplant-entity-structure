@@ -6,6 +6,7 @@ use DevGroup\TagDependencyHelper\CacheableActiveRecord;
 use DevGroup\TagDependencyHelper\TagDependencyTrait;
 use DotPlant\EntityStructure\StructureModule;
 use yii\base\InvalidParamException;
+use yii\caching\TagDependency;
 use yii\db\ActiveRecord;
 use Yii;
 
@@ -23,7 +24,7 @@ class Entity extends ActiveRecord
 {
     use TagDependencyTrait;
     /** @var array */
-    private static $classMap = [];
+    private static $entitiesMap = [];
 
     /**
      * @inheritdoc
@@ -94,16 +95,81 @@ class Entity extends ActiveRecord
      */
     public static function getEntityIdForClass($className)
     {
-        if (false === isset(self::$classMap[$className])) {
-            if (false === $id = self::find()->select('id')->where(['class_name' => $className])->scalar()) {
-                throw new InvalidParamException(Yii::t(
-                    'dotplant.entity.structure',
-                    'Unknown entity class \'{class}\'.',
-                    ['class' => $className]
-                ));
-            }
-            self::$classMap[$className] = $id;
+        self::entitiesMap();
+        if (false === isset(self::$entitiesMap[$className])) {
+            throw new InvalidParamException(Yii::t(
+                'dotplant.entity.structure',
+                'Unknown entity class \'{class}\'.',
+                ['class' => $className]
+            ));
         }
-        return self::$classMap[$className];
+        return (int)self::$entitiesMap[$className]['id'];
     }
+
+    /**
+     * @param $id
+     * @return mixed
+     */
+    public static function getEntityClassForId($id)
+    {
+        self::entitiesMap();
+        $class = null;
+        foreach (self::$entitiesMap as $className => $itemData) {
+            if ($itemData['id'] == $id) {
+                $class = $className;
+                break;
+            }
+        }
+        if (null === $class) {
+            throw new InvalidParamException(Yii::t(
+                'dotplant.entity.structure',
+                'Invalid entity id #{id}',
+                ['id' => $id]
+            ));
+        }
+        return $class;
+    }
+
+    /**
+     * @return array
+     */
+    public static function getIdToClassList()
+    {
+        self::entitiesMap();
+        $idToClass = Yii::$app->cache->get('Structure:IdToClassList');
+        if (false === $idToClass) {
+            $idToClass = [];
+            foreach (self::$entitiesMap as $className => $data) {
+                $idToClass[$data['id']] = $className;
+            }
+            Yii::$app->cache->set(
+                'Structure:IdToClassList',
+                $idToClass,
+                86400,
+                new TagDependency(['tags' => self::commonTag()])
+            );
+        }
+        return $idToClass;
+    }
+
+    /**
+     * @return array|mixed|\yii\db\ActiveRecord[]
+     */
+    public static function entitiesMap()
+    {
+        if (true === empty(self::$entitiesMap)) {
+            self::$entitiesMap = Yii::$app->cache->get('Structure:EntitiesMap');
+            if (false === self::$entitiesMap) {
+                self::$entitiesMap = Entity::find()->asArray()->indexBy('class_name')->all();
+                Yii::$app->cache->set(
+                    'Structure:EntitiesMap',
+                    self::$entitiesMap,
+                    86400,
+                    new TagDependency(['tags' => self::commonTag()])
+                );
+            }
+        }
+        return self::$entitiesMap;
+    }
+
 }

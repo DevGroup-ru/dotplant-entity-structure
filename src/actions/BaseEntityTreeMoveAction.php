@@ -5,11 +5,13 @@ namespace DotPlant\EntityStructure\actions;
 use DevGroup\AdminUtils\actions\BaseAdminAction;
 use DevGroup\TagDependencyHelper\NamingHelper;
 use DotPlant\EntityStructure\models\BaseStructure;
+use DotPlant\EntityStructure\models\Entity;
 use DotPlant\EntityStructure\models\StructureTranslation;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\base\InvalidParamException;
 use yii\caching\TagDependency;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 
 /**
@@ -21,9 +23,6 @@ use yii\web\NotFoundHttpException;
  */
 class BaseEntityTreeMoveAction extends BaseAdminAction
 {
-    /** @var string | null  Entity class name */
-    public $className = null;
-
     /** @var string */
     public $modelParentIdField = 'parent_id';
 
@@ -38,18 +37,6 @@ class BaseEntityTreeMoveAction extends BaseAdminAction
      */
     public function init()
     {
-        if (true === empty($this->className)) {
-            throw new InvalidConfigException(
-                Yii::t('dotplant.entity.structure', "The 'className' param must be set!")
-            );
-        }
-        $className = $this->className;
-        if (false === is_subclass_of($className, BaseStructure::class)) {
-            throw new InvalidConfigException(Yii::t(
-                'dotplant.entity.structure',
-                "The 'className' must extend 'DotPlant\\EntityStructure\\models\\BaseStructure'!"
-            ));
-        }
         if (!in_array($this->modelParentIdField, $this->saveAttributes)) {
             $this->saveAttributes[] = $this->modelParentIdField;
         }
@@ -60,13 +47,20 @@ class BaseEntityTreeMoveAction extends BaseAdminAction
      */
     public function run($id = null)
     {
+        $entityId = BaseStructure::getEntityIdForModelId($id);
+        /** @var BaseStructure $entityClass */
+        $entityClass = Entity::getEntityClassForId($entityId);
+        $permissions = $entityClass::getAccessRules();
+        if (true === isset($permissions['edit'])) {
+            if (false === Yii::$app->user->can($permissions['edit'])) {
+                throw new ForbiddenHttpException(Yii::t('yii', 'You are not allowed to perform this action.'));
+            }
+        }
         $this->parentId = Yii::$app->request->get('parent_id');
-        /** @var BaseStructure $class */
-        $class = $this->className;
         if (null === $id
             || null === $this->parentId
-            || (null === $model = $class::findOne($id))
-            || (null === $parent = $class::findOne($this->parentId))
+            || (null === $model = $entityClass::findOne($id))
+            || (null === $parent = $entityClass::findOne($this->parentId))
         ) {
             throw new NotFoundHttpException;
         }
@@ -86,7 +80,7 @@ class BaseEntityTreeMoveAction extends BaseAdminAction
             if (true === $model->save()) {
                 TagDependency::invalidate(
                     Yii::$app->cache,
-                    NamingHelper::getCommonTag($class)
+                    NamingHelper::getCommonTag(BaseStructure::class)
                 );
                 return true;
             } else {

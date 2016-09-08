@@ -27,9 +27,9 @@ class StructureModule extends Module
      */
     public static function module()
     {
-        $module = Yii::$app->getModule('entityStructure');
+        $module = Yii::$app->getModule('structure');
         if ($module === null) {
-            $module = Yii::createObject(self::class, ['entityStructure']);
+            $module = Yii::createObject(self::class, ['structure']);
         }
         return $module;
     }

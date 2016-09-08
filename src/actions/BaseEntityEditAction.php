@@ -8,8 +8,8 @@ use DevGroup\DataStructure\traits\PropertiesTrait;
 use DevGroup\Multilingual\behaviors\MultilingualActiveRecord;
 use DevGroup\TagDependencyHelper\TagDependencyTrait;
 use DotPlant\EntityStructure\models\BaseStructure;
+use DotPlant\EntityStructure\models\Entity;
 use Yii;
-use yii\base\InvalidConfigException;
 use yii\helpers\StringHelper;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
@@ -21,55 +21,22 @@ use yii\web\NotFoundHttpException;
  */
 class BaseEntityEditAction extends BaseAdminAction
 {
-    /** @var  BaseStructure | HasProperties | TagDependencyTrait */
-    public $entityClass;
-
-    /**
-     * View file to render
-     *
-     * @var string
-     */
-    public $viewFile = '@DotPlant/EntityStructure/views/default/entity-edit';
-
-    /**
-     * Permission name to be checked for providing access to action
-     *
-     * @var string
-     */
-    public $permission = '';
-
     /**
      * @inheritdoc
      */
-    public function init()
+    public function run($id = null, $parent_id = null, $entity_id)
     {
-        if (false === is_string($this->permission)) {
-            throw new InvalidConfigException(
-                Yii::t('dotplant.entity.structure', "Parameter 'permission' must be a string!")
-            );
-        }
-        if (true === empty($this->entityClass)) {
-            throw new InvalidConfigException(
-                Yii::t('dotplant.entity.structure', "The 'entityClass' param must be set!")
-            );
-        }
-        $entityClass = $this->entityClass;
-        if (false === is_subclass_of($entityClass, BaseStructure::class)) {
-            throw new InvalidConfigException(Yii::t(
-                'dotplant.entity.structure',
-                "The 'entityClass' must extend 'DotPlant\\EntityStructure\\models\\BaseStructure'!"
-            ));
-        }
-        parent::init();
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function run($id = null, $parent_id = null)
-    {
-        $entityClass = $this->entityClass;
+        /** @var BaseStructure $entityClass */
+        $entityClass = Entity::getEntityClassForId($entity_id);
+        $permissions = $entityClass::getAccessRules();
         $entityName = StringHelper::basename($entityClass);
+        $entitySelectorPrefix = strtolower($entityName);
+        $user = Yii::$app->user;
+        if (true === isset($permissions['view'])) {
+            if (false === $user->can($permissions['view'])) {
+                throw new ForbiddenHttpException(Yii::t('yii', 'You are not allowed to perform this action.'));
+            }
+        }
         /**
          * @var BaseStructure|HasProperties|PropertiesTrait|TagDependencyTrait|MultilingualActiveRecord $structureModel
          */
@@ -95,7 +62,7 @@ class BaseEntityEditAction extends BaseAdminAction
         $post = Yii::$app->request->post();
         $structureModel->entity_id = $structureModel->getEntityId();
         $canSave = true;
-        if (false === empty($this->permission) && false === Yii::$app->user->can($this->permission)) {
+        if (true === isset($permissions['edit']) && false === $user->can($permissions['edit'])) {
             $canSave = false;
         }
         if (false === empty($post)) {
@@ -109,8 +76,8 @@ class BaseEntityEditAction extends BaseAdminAction
                 unset($translationClass);
 
                 foreach ($translations as $language => $data) {
-                    $data['parentContextId'] = (int) $structureModel->context_id;
-                    $data['parentParentId'] = (int) $structureModel->parent_id;
+                    $data['parentContextId'] = (int)$structureModel->context_id;
+                    $data['parentParentId'] = (int)$structureModel->parent_id;
                     $structureModel->translate($language)->oldSlug = $structureModel->translate($language)->slug;
                     foreach ($data as $attribute => $translation) {
                         $structureModel->translate($language)->$attribute = $translation;
@@ -126,8 +93,11 @@ class BaseEntityEditAction extends BaseAdminAction
                         if (true === $refresh) {
                             return $this->controller->refresh();
                         } else {
-                            //! @todo Move route to param
-                            return $this->controller->redirect(['pages-manage/edit', 'id' => $structureModel->id]);
+                            return $this->controller->redirect([
+                                'edit',
+                                'id' => $structureModel->id,
+                                'entity_id' => $structureModel->entity_id
+                            ]);
                         }
                     } else {
                         Yii::$app->session->setFlash('error',
@@ -145,10 +115,11 @@ class BaseEntityEditAction extends BaseAdminAction
             }
         }
         return $this->controller->render(
-            $this->viewFile,
+            $entityClass::getEditViewFile(),
             [
                 'model' => $structureModel,
-                'canSave' => $canSave
+                'canSave' => $canSave,
+                'entitySelectorPrefix' => $entitySelectorPrefix,
             ]
         );
     }

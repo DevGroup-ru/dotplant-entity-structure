@@ -18,7 +18,10 @@
     "devgroup/yii2-multilingual": "*",
     "devgroup/yii2-data-structure-tools": "*",
     "devgroup/yii2-admin-utils": "dev-master",
-    "yii2tech/ar-role": "^1.0"
+    "yii2tech/ar-role": "^1.0",
+    "kartik-v/yii2-widget-switchinput": "*",
+    "kartik-v/yii2-widget-select2": "@dev",
+    "devgroup/yii2-jstree-widget": "dev-master"
   },
   "require-dev": {
     "yiisoft/yii2-codeception": "~2.0.0",

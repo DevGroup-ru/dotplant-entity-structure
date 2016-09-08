@@ -4,25 +4,41 @@
  * @var $this \yii\web\View
  * @var \DotPlant\EntityStructure\models\BaseStructure $model
  * @var bool $canSave
+ * @var string $entitySelectorPrefix
  */
-use DotPlant\EntityStructure\StructureModule;
+
+use kartik\switchinput\SwitchInput;
 use DevGroup\Multilingual\models\Context;
 use dmstr\widgets\Alert;
 use yii\helpers\ArrayHelper;
+use kartik\select2\Select2;
+use yii\web\JsExpression;
+use yii\helpers\Url;
+use yii\web\View;
+use DotPlant\EntityStructure\assets\ContextBehaviorAsset;
+use DevGroup\Multilingual\widgets\MultilingualFormTabs;
+use DevGroup\DataStructure\widgets\PropertiesForm;
 
-$this->title = empty($model->id)
-    ? Yii::t('dotplant.entity.structure', 'New entity')
-    : Yii::t('dotplant.entity.structure', 'Edit entity #{id}', ['id' => $model->id]);
-
-$this->params['breadcrumbs'][] = [
-    'url' => ['index'],
-    'label' => Yii::t('dotplant.entity.structure', 'Entities management')
-];
+$this->title = $model->getEditPageTitle();
+$breadcrumbs = empty($this->params['breadcrumbs']) ? [] : $this->params['breadcrumbs'];
+$this->params['breadcrumbs'] = ArrayHelper::merge($breadcrumbs, $model::getModuleBreadCrumbs());
 $this->params['breadcrumbs'][] = $this->title;
 $contexts = ArrayHelper::map(Context::find()->all(), 'id', 'name');
-
+$url = Url::to(['/structure/entity-manage/autocomplete']);
+$getContextUrl = Url::to(['/structure/entity-manage/get-context-id']);
+$missingText = Yii::t('dotplant.entity.structure', 'Missing parameter {param}', ['param' => 'getContextUrl']);
+$missingSelectorText = Yii::t('dotplant.entity.structure', 'Missing parameter {param}', ['param' => 'missingSelectorText']);
+$js = <<<JS
+    window.DPStructure = window.DPStructure || {};
+    window.DPStructure.getContextUrl = '$getContextUrl';
+    window.DPStructure.missingText = '$missingText';
+    window.DPStructure.selectSelector = '#$entitySelectorPrefix-context_id';
+    window.DPStructure.missingSelectorText = '$missingSelectorText';
+JS;
+$this->registerJs($js, View::POS_HEAD);
+ContextBehaviorAsset::register($this);
 $form = \yii\bootstrap\ActiveForm::begin([
-    'id' => 'page-form',
+    'id' => $entitySelectorPrefix . '-form',
 //    'options' => [
 //        'enctype' => 'multipart/form-data'
 //    ]
@@ -40,7 +56,7 @@ $form = \yii\bootstrap\ActiveForm::begin([
             <?php if (false === $model->isNewRecord) : ?>
                 <li class="">
                     <a href="#page-properties" data-toggle="tab" aria-expanded="false">
-                        <?= Yii::t('dotplant.entity.structure', 'Entity properties') ?>
+                        <?= Yii::t('dotplant.entity.structure', 'Properties') ?>
                     </a>
                 </li>
             <?php endif; ?>
@@ -48,12 +64,36 @@ $form = \yii\bootstrap\ActiveForm::begin([
         <div class="tab-content">
             <div class="tab-pane active" id="page-data">
                 <div class="col-sm-12 col-md-6">
-                    <?= $form->field($model, 'parent_id') ?>
+                    <?= $form->field($model, 'parent_id')->widget(Select2::class, [
+                        'initValueText' => (null === $model->parent)
+                            ? Yii::t('dotplant.entity.structure', 'Search for a parent ...')
+                            : $model->parent->name,
+                        'options' => [
+                            'placeholder' => Yii::t('dotplant.entity.structure', 'Search for a parent ...')
+                        ],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                            'minimumInputLength' => 3,
+                            'ajax' => [
+                                'url' => $url,
+                                'dataType' => 'json',
+                                'data' => new JsExpression('function(params) { return {q:params.term}; }'),
+                                'delay' => '400',
+                                'error' => new JsExpression('function(error) {alert(error.responseText);}'),
+                            ],
+                            'escapeMarkup' => new JsExpression('function (markup) { return markup; }'),
+                            'templateResult' => new JsExpression('function(parent) { return parent.text; }'),
+                            'templateSelection' => new JsExpression('function (parent) { return parent.text; }'),
+                        ],
+                        'pluginEvents' => [
+                            "change" => "$.select2Change",
+                        ]
+                    ]) ?>
                 </div>
                 <div class="col-sm-12 col-md-6">
                     <div class="row">
                         <div class="col-sm-4">
-                            <?= $form->field($model, 'expand_in_tree')->checkbox() ?>
+                            <?= $form->field($model, 'expand_in_tree')->widget(SwitchInput::class) ?>
                         </div>
                         <div class="col-sm-4">
                             <?php
@@ -75,7 +115,7 @@ $form = \yii\bootstrap\ActiveForm::begin([
                 </div>
                 <div class="row">
                     <div class="col-sm-12">
-                        <?= DevGroup\Multilingual\widgets\MultilingualFormTabs::widget([
+                        <?= MultilingualFormTabs::widget([
                             'model' => $model,
                             'childView' => '@DotPlant/EntityStructure/views/default/multilingual-part.php',
                             'form' => $form,
@@ -84,7 +124,7 @@ $form = \yii\bootstrap\ActiveForm::begin([
                 </div>
             </div>
             <div class="tab-pane" id="page-properties">
-                <?= \DevGroup\DataStructure\widgets\PropertiesForm::widget([
+                <?= PropertiesForm::widget([
                     'model' => $model,
                     'form' => $form,
                 ]) ?>
