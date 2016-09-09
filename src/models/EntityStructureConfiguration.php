@@ -3,6 +3,7 @@
 namespace DotPlant\EntityStructure\models;
 
 use DevGroup\ExtensionsManager\models\BaseConfigurationModel;
+use DotPlant\EntityStructure\components\StructureUrlRule;
 use DotPlant\EntityStructure\StructureModule;
 use Yii;
 
@@ -70,6 +71,13 @@ class EntityStructureConfiguration extends BaseConfigurationModel
                             'basePath' => dirname(__DIR__) . DIRECTORY_SEPARATOR . 'messages',
                         ]
                     ]
+                ],
+                'urlManager' => [
+                    'rules' => [
+                        [
+                            'class' => StructureUrlRule::class,
+                        ],
+                    ],
                 ],
             ],
             'modules' => [
