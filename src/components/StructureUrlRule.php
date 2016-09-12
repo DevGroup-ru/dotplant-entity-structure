@@ -50,7 +50,7 @@ class StructureUrlRule extends Object implements UrlRuleInterface
                         'parent_id' => $structure === null ? null : $structure->id
                     ])
                     ->select([
-                        'id',
+                        'id', 'entity_id'
                     ])
                     ->one();
 
