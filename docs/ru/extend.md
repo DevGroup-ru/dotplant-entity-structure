@@ -19,13 +19,16 @@
 Данное расширение - базовая структура для всех сущностей, которые есть и будут добавляться в CMS DotPlant3.
 Расширение включает в себя:
 
- - набор миграций, создающих основные таблицы `dotplant_structure`, `dotplant_entity`, `dotplant_structure_translation`; 
+ - набор миграций, создающих основные таблицы `dotplant_structure`, `dotplant_entity`, `dotplant_structure_translation`;
+ - базовый контроллер, который предоставляет доступ к базовым экшенам по маршрутам:
+   * `/structure/entity-manage/index` - дерево всех сущностей и список всех сущностей, находящихся внутри выбранной в дереве
+   * `/structure/entity-manage/edit?id="id"&entity_id="id"` - редактирование конкретной записи. `id` и `entity_id` - обязательные параметры
+   * `/structure/entity-manage/delete?id="id"&entity_id="id"` - удаление конкретной записи. `id` и `entity_id` - обязательные параметры  
  - набор базовых экшенов, которые предоставляют функционал создания, редактирования, удаления, 
  сборки данных для `jstree` дерева и поиска с автодополнением по базовым полям сущностей.
- Если этот параметр опустить, никаких проверок доступа производиться не будет.
  - набор файлов представления по умолчанию для отображения и редактирвоания сущностей;
  
-### Настройки расшерения
+### Настройки расширения
 
 Данное расширение имеет тип `dotplant-extension`, благодаря этому оно имеет ряд собственных настроек, редактируемых 
 через административную часть сайта в разделе `/extensions-manager/extensions/config`. Имеются 2 базовых настройки
@@ -73,6 +76,64 @@ class Ticket extends BaseStructure
     protected static function getPageSize()
     {
         return TicketsModule::module()->itemsPerPage;
+    }
+    
+     public static function getAccessRules()
+    {
+        return [
+            'view' => 'dotplant-tickets-view',
+            'edit' => 'dotplant-tickets-edit',
+            'delete' => 'dotplant-tickets-delete',
+            'apply' => 'dotplant-tickets-apply',
+        ];
+    }
+    
+    protected static $injectionActions = [
+        'apply' => [
+            'class' => TicketsApplyAction::class
+        ],
+    ];
+
+    public function getEditPageTitle()
+    {
+        return (true === $this->getIsNewRecord())
+            ? Yii::t('dotplant.tickets', 'New ticket')
+            : Yii::t('dotplant.tickets', 'Edit {title}', ['title' => $this->name]);
+    }
+
+    public static function getModuleBreadCrumbs()
+    {
+        return [
+            [
+                'url' => ['/structure/entity-manage/index'],
+                'label' => Yii::t('dotplant.tickets', 'Tickets management')
+            ]
+        ];
+    }
+
+    public function additionalGridButtons()
+    {
+        return [
+            'apply' => [
+                'url' => '/structure/entity-manage/apply',
+                'icon' => 'check-square-o',
+                'class' => 'btn-primary',
+                'label' => Yii::t('dotplant.tickets', 'Apply'),
+                'attrs' => ['entity_id']
+            ]
+        ];
+    }
+    
+    public static function jsTreeContextMenuActions()
+    {
+        $ticketsEntityId = Entity::getEntityIdForClass(self::class);
+        return [
+            'tickets' => [
+                'label' => Yii::t('dotplant.tickets', 'Apply ticket'),
+                'action' => ContextMenuHelper::actionUrl(['/structure/entity-manage/apply']),
+                'showWhen' => ['entity_id' => $ticketsEntityId]
+            ],
+        ];
     }
 }
 ```
@@ -124,7 +185,112 @@ return [
     }
 ```
 
-При желании, можно (и нужно, если записями сущности нужно управлять из админки) создать модуль расширения, об этом подробннее в [правилах создания расширений для DotPlant](https://github.com/DevGroup-ru/yii2-extensions-manager/blob/master/docs/ru/package-creation.md). Если не перегрузить этот метод в своей модели, то будет использован метод из родительской и настройки расширения, указанные выше, будут действовать и на расширение которое мы создаем.
+*Права доступа к экшенам расширения*
+
+```php
+    public static function getAccessRules()
+    {
+        return [
+            'view' => 'dotplant-tickets-view',
+            'edit' => 'dotplant-tickets-edit',
+            'delete' => 'dotplant-tickets-delete',
+            'apply' => 'dotplant-tickets-apply',
+        ];
+    }
+```    
+
+Если расширение имеет особые разрешения на выполняемые действия, то их следует задавать, как описано выше. Метод дожен возвращать массив,
+где ключ - название выполняемого действия, а значение - название разрешения для выполнения этого действия.
+По умолчанию обрабатываются разрешения только для действий `view`, `edit` и `delete`. Если вы планируете добавлять собственные экшены,
+то специальные разрешения для них можно задать там же, как к примеру `'apply' => 'dotplant-tickets-apply'`. А в экшене это необходимо 
+отдельно обработать. 
+ 
+*Встраивание собственных экшенов в общий контрлоллер*
+
+```php
+    protected static $injectionActions = [
+        'apply' => [
+            'class' => TicketsApplyAction::class
+        ],
+    ];
+```
+
+Если требуется добавить в контроллер собственные действия, то добиться этого можно, как в примере выше. Дополнительных экшенов может быть несколько.
+Этот массив имеет абсолютно аналогичную структуру, как и массив, который возвращает метод  `yii\web\Controller::actions()` и работает по такому же принципу.
+После добавления, экшн будет доступен по маршруту `/structure/entity-manage/apply`
+
+*Кастомизация заголовков и хлебных крошек*
+
+```php
+    public function getEditPageTitle()
+    {
+        return (true === $this->getIsNewRecord())
+            ? Yii::t('dotplant.tickets', 'New ticket')
+            : Yii::t('dotplant.tickets', 'Edit {title}', ['title' => $this->name]);
+    }
+
+    public static function getModuleBreadCrumbs()
+    {
+        return [
+            [
+                'url' => ['/structure/entity-manage/index'],
+                'label' => Yii::t('dotplant.tickets', 'Tickets management')
+            ]
+        ];
+    }
+```            
+
+Если есть необходимость сделать уникальные заголовки при редактировании страницы создваемой сущности или изменить массив хлебных крошек,
+это можно сделать с помощью методов выше.
+
+*Дополнительные кнопки в таблице сущностей*
+
+```php
+    public function additionalGridButtons()
+    {
+        return [
+            'apply' => [
+                'url' => '/structure/entity-manage/apply',
+                'icon' => 'check-square-o',
+                'class' => 'btn-primary',
+                'label' => Yii::t('dotplant.tickets', 'Apply'),
+                'attrs' => ['entity_id']
+            ]
+        ];
+    }
+```
+
+С помощью метода, указанного выше, есть возможность добавить собственные кнопки в список сущностей, отображаемых на страницах листинга.
+При этом, напротив каждой записи с создаваемой сущностью в списке кроме стандартных кнопок "Редактировать" и "Удалить" появится кнопка 
+"Apply", нажатие на которую будет приводить к вызову экшена, указанного в параметре `url`. В случае выше - это собственный экшн, который был
+внедрен в базовый контроллер.
+
+*Добавление собственных ссылок в контекстное меню дерева*
+
+```php
+    public static function jsTreeContextMenuActions()
+    {
+        $ticketsEntityId = Entity::getEntityIdForClass(self::class);
+        return [
+            'tickets' => [
+                'label' => Yii::t('dotplant.tickets', 'Apply ticket'),
+                'action' => ContextMenuHelper::actionUrl(['/structure/entity-manage/apply']),
+                'showWhen' => ['entity_id' => $ticketsEntityId]
+            ],
+        ];
+    }
+```
+
+На странице листинга сущностей выведено дерево всех сущностей с помощью расширения [yii2-jstree-widget](https://github.com/DevGroup-ru/yii2-jstree-widget).
+Расширение использует плагин [jstree](https://www.jstree.com/) , который позволяет настраивать добавление контекстного меню при правом клике мышкой на 
+элементе дерева. По умолчанию есть только 2 пункта "Открыть" и "Редактировать". С помощью метода, показанного выше, можно добавить
+собственные пункты меню, которые будут показываться в зависимости от определенных уловий. За данную возможность отвечает ключ:
+`'showWhen' => ['entity_id' => $ticketsEntityId]` 
+В данном случае проверяется, что сущность, для которой мы хотим добавить пункт, является сущностью Ticket. Если не указать условие, дополнительные пункты
+будут доступны для всех элементов дерева.
+Ключ массива, описывающего пункт меню - `tickets` следует задавать только латинскими буквами без пробелов и спецсимволов. В противном случае возникнет ошибка при 
+при попытке вызвать контекстное меню.
+
 
 Далее, чтобы модель заработала и создались необходимые дополнительные таблицы, нужно создать миграцию, примерно следующего содержания.
 
@@ -189,105 +355,40 @@ public function up()
 ```
 Следует помнить, что руками данную миграцию выполнять не нужно! Она будет выполнена автоматически при активации расширения в менеджере расширений.
 
-Чтобы иметь возможность управлять записями типа Ticket из админки, нам необходимо создать соответствующий контроллер.
-Согласно [правилам оформления кода](https://github.com/DevGroup-ru/code-style), назовем его `TicketsManageController`
+*Пример реализации собственного экшена*
 
 ```php
-class TicketsManageController extends BaseController
+class TicketsApplyAction extends BaseAdminAction
 {
-    /* Подключаем стандтартные поведения для разграничения прав доступа. Помним, что мы создали специальное разрешение
-    'tickets-manage', имея которое, пользователи имеют право управлять записями */
-    public function behaviors()
+    /**
+     * @param $id
+     * @param $entity_id
+     * @param string $returnUrl
+     * @return \yii\web\Response
+     * @throws ForbiddenHttpException
+     * @throws \Exception
+     * @throws bool
+     */
+    public function run($id, $entity_id, $returnUrl = '')
     {
-        return [
-            'access' => [
-                'class' => AccessControl::class,
-                'rules' => [
-                    [
-                        'allow' => true,
-                        'actions' => ['index'],
-                        'roles' => ['dotplant-tickets-view'],
-                    ],
-                    [
-                        'allow' => true,
-                        'actions' => ['edit'],
-                        'roles' => ['dotplant-tickets-edit'],
-                    ],
-                    [
-                        'allow' => true,
-                        'actions' => ['delete'],
-                        'roles' => ['dotplant-tickets-delete'],
-                    ],                    
-                    [
-                        'allow' => false,
-                        'roles' => ['*']
-                    ]
-                ],
-            ],
-            'verbs' => [
-                'class' => VerbFilter::class,
-                'actions' => [
-                    'delete' => ['POST'],
-                ],
-            ]
-        ];
-    }
-
-    /* Подключаем необходимые экшены для управления записями. Это полный список, можно оставить только нужные */
-    public function actions()
-    {
-        return [
-            'index' => [ //вывод списка записей в GridView
-                'class' => BaseEntityListAction::class,
-                'entityClass' => Tickets::class, //обязательный параметр. Класс сущности, которой будем управлять
-                'viewFile' => '@VendorName/Tickets/views/tickets-manage/index' //файл представления. Если есть свой. Если не задать будет использован стандартный
-            ],
-            'edit' => [ //создание и редактирование записи
-                'class' => BaseEntityEditAction::class,
-                'entityClass' => Tickets::class,  //обязательный параметр. Класс сущности, которой будем управлять
-                'viewFile' => '@DotPlant/Content/views/pages-manage/edit'  //файл представления. Если есть свой. Если не задать будет использован стандартный
-                'permission' => 'dotplan-tickets-edit' //разрешение для проверки прав доступа к действию
-            ],
-            'autocomplete' => [ //экшн для поиска с автодополнением (используется, например, для поиска родителя записи)
-                'class' => BaseEntityAutocompleteAction::class,
-                'entityClass' => Tickets::class,  //обязательный параметр. Класс сущности, которой будем управлять
-            ],
-            'delete' => [ //удаление записи. Мягкое и полное
-                'class' => BaseEntityDeleteAction::class,
-                'entityClass' => Tickets::class,  //обязательный параметр. Класс сущности, которой будем управлять
-            ],
-            'restore' => [ //восстановление записи при мягком удалении
-                'class' => BaseEntityRestoreAction::class,
-                'entityClass' => Tickets::class,  //обязательный параметр. Класс сущности, которой будем управлять
-            ],
-            'get-tree' => [ //получение данных для построение дерева в jstree виджете
-                'class' => BaseEntityTreeAction::class,
-                'className' => Tickets::class, //обязательный параметр. Класс сущности, которой будем управлять
-                'showHiddenInTree' => TicketsModule::module()->showHiddenInTree, //настройка, позволяющая скрывать или показывать удаленные записи в дереве
-            ],
-            'tree-reorder' => [ //drag-n-drop сортировка записей в дереве jstree виджета
-                'class' => TreeNodesReorderAction::class,
-                'className' => Tickets::class, //обязательный параметр. Класс сущности, которой будем управлять
-            ],
-            'tree-parent' => [ //drag-n-drop перемещение узла дерева jstree между различными родительскими узлами
-                'class' => BaseEntityTreeMoveAction::class,
-                'className' => Tickets::class, //обязательный параметр. Класс сущности, которой будем управлять
-                'saveAttributes' => ['parent_id', 'context_id'] //список сохраняемых параметров
-            ],
-
-        ];
+        //получаем класс сущности по её id из запроса
+        /** @var BaseStructure $entityClass */
+        $entityClass = Entity::getEntityClassForId($entity_id);
+        
+        //получаем массив прав доступа для сущности
+        $permissions = $entityClass::getAccessRules();
+        
+        //проверяем, имеет ли пользователь соответствующее разрешение
+        if (true === isset($permissions['apply']) && false === Yii::$app->user->can($permissions['apply'])) {
+            throw new ForbiddenHttpException(Yii::t('yii', 'You are not allowed to perform this action.'));
+        }
+        
+        //выполняем необходимые действия
+        
+        //возвращаем пользователя на страницу, с которой он пришел, если необходимо
+        $returnUrl = empty($returnUrl) ? ['/structure/entity-manage'] : $returnUrl;
+        return $this->controller->redirect($returnUrl);
     }
 }
 ```
-
-Обратите внимание, что экшн `BaseEntityEditAction::class` имеет дополнительную настройку - `permission`. 
-Это название разрешения, которым должен обладать пользователь, чтобы иметь возможность редактировать (читай, сохранять изменения) записи.
-По умолчанию, просмотр формы редактирования записи доступен даже с разрешение для просмотра, а дополнительное разрешение позволяет ограничивать круг тех, 
-кому можно сохранять изменения.
-Если эту настроку не указать, то сохранять можно будет всем, кого вы указали в списке доступа к экшену редактирования.
-
-Теперь, после установки и активации созданного расширения управление записями будет доступно по пути `/tickets/tickets-manage`
-
-
-
 
