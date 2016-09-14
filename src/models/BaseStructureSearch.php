@@ -6,6 +6,7 @@ use DevGroup\AdminUtils\traits\FetchModels;
 use DevGroup\Entity\traits\BaseActionsInfoTrait;
 use DevGroup\Entity\traits\EntityTrait;
 use DevGroup\Entity\traits\SoftDeleteTrait;
+use DotPlant\EntityStructure\StructureModule;
 use yii\data\ActiveDataProvider;
 use yii\db\ActiveQuery;
 
@@ -33,7 +34,7 @@ class BaseStructureSearch extends BaseStructure
         $dataProvider = new ActiveDataProvider([
             'query' => $query = static::find(),
             'pagination' => [
-                'pageSize' => static::getPageSize(),
+                'pageSize' => StructureModule::module()->defaultPageSize,
             ],
         ]);
         if (null != $this->parent_id) {

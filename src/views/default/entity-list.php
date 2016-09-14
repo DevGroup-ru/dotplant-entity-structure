@@ -58,7 +58,7 @@ $gridTpl = <<<HTML
 HTML;
 ?>
 <div class="row">
-    <div class="col-sm-12 col-md-6">
+    <div class="col-sm-12 col-md-4">
         <?php
         $contextMenu = BaseStructure::getContextMenu([
             'open' => [
@@ -84,7 +84,7 @@ HTML;
             'contextMenuItems' => $contextMenu,
         ]) ?>
     </div>
-    <div class="col-sm-12 col-md-6">
+    <div class="col-sm-12 col-md-8">
         <div class="entities__list-entities box box-solid">
             <div class="box-header with-border clearfix">
                 <h3 class="box-title pull-left">
@@ -153,9 +153,6 @@ HTML;
                     ],
                     [
                         'class' => ActionColumn::class,
-                        'options' => [
-                            'width' => '120px',
-                        ],
                         'buttons' => function ($model, $key, $index, $column) {
                             /** @var BaseStructureSearch $model */
                             $result = [

@@ -352,16 +352,6 @@ class BaseStructure extends ActiveRecord implements PermissionsInterface, Struct
     }
 
     /**
-     * Allows to configure count per page listed records separately for each DotPlant Entity
-     *
-     * @return int
-     */
-    protected static function getPageSize()
-    {
-        return StructureModule::module()->defaultPageSize;
-    }
-
-    /**
      * @inheritdoc
      */
     protected function getAttributeLabels()

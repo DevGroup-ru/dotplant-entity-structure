@@ -12,6 +12,7 @@ use DotPlant\EntityStructure\actions\BaseEntityTreeAction;
 use DotPlant\EntityStructure\actions\BaseEntityTreeMoveAction;
 use DotPlant\EntityStructure\actions\BaseEntityTreeReorderAction;
 use DotPlant\EntityStructure\models\BaseStructure;
+use DotPlant\EntityStructure\StructureModule;
 use yii\filters\VerbFilter;
 use Yii;
 use yii\helpers\ArrayHelper;
@@ -63,6 +64,7 @@ class EntityManageController extends BaseController
             ],
             'get-tree' => [
                 'class' => BaseEntityTreeAction::class,
+                'showHiddenInTree' => StructureModule::module()->showHiddenInTree,
             ],
             'tree-reorder' => [
                 'class' => BaseEntityTreeReorderAction::class,

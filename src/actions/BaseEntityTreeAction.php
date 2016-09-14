@@ -5,6 +5,7 @@ namespace DotPlant\EntityStructure\actions;
 use DevGroup\Multilingual\models\Context;
 use DevGroup\TagDependencyHelper\NamingHelper;
 use DotPlant\EntityStructure\models\BaseStructure;
+use DotPlant\EntityStructure\models\Entity;
 use Yii;
 use yii\base\Action;
 use yii\caching\TagDependency;
@@ -42,6 +43,8 @@ class BaseEntityTreeAction extends Action
     public $contextIdAttribute = 'context_id';
 
     public $showHiddenInTree = null;
+
+    public $checked = [];
 
     /**
      * Additional conditions for retrieving tree(ie. don't display nodes marked as deleted)
@@ -95,11 +98,10 @@ class BaseEntityTreeAction extends Action
             if (count($this->whereCondition) > 0) {
                 $query = $query->where($this->whereCondition);
             }
-
+            $entityId = (null !== $this->className) ? Entity::getEntityIdForClass($this->className) : null;
             if (null === $rows = $query->asArray()->all()) {
                 return [];
             }
-
             $result = [];
             $hidden = [];
             $roots = BaseStructure::find()->select(['id'])->where(['is_deleted' => 1])->column();
@@ -121,7 +123,7 @@ class BaseEntityTreeAction extends Action
                 $item = [];
                 if (true === in_array($row[$this->modelIdAttribute], $hidden)) {
                     if (true === $this->showHiddenInTree) {
-                        $item['state'] = ['disabled' => true];
+                        self::setState($item, ['disabled' => true]);
                     } else {
                         continue;
                     }
@@ -142,10 +144,15 @@ class BaseEntityTreeAction extends Action
                         'data-entity_id' => $row['entity_id'],
                     ],
                 ];
+                if (null !== $entityId && $entityId != $row['entity_id']) {
+                    self::setState($item, ['checkbox_disabled' => true]);
+                }
+                if (true === in_array($row[$this->modelIdAttribute], $this->checked)) {
+                    self::setState($item, ['state' => ['opened' => true, 'selected' => true]]);
+                }
                 if (null !== $this->varyByTypeAttribute) {
                     $item['type'] = $row[$this->varyByTypeAttribute];
                 }
-
                 $result[$row[$this->modelIdAttribute]] = $item;
             }
 
@@ -169,6 +176,19 @@ class BaseEntityTreeAction extends Action
         }
 
         return array_values($result);
+    }
+
+    /**
+     * @param array $item
+     * @param array $value
+     */
+    private static function setState(&$item, $value)
+    {
+        if (true === isset($item['state'])) {
+            $item['state'] = array_merge($item['state'], $value);
+        } else {
+            $item['state'] = $value;
+        }
     }
 
     /**
