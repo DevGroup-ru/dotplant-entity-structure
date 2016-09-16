@@ -44,8 +44,6 @@ class BaseEntityTreeAction extends Action
 
     public $showHiddenInTree = null;
 
-    public $checked = [];
-
     /**
      * Additional conditions for retrieving tree(ie. don't display nodes marked as deleted)
      * @var array
@@ -81,9 +79,14 @@ class BaseEntityTreeAction extends Action
         if (null === $current_selected_id = Yii::$app->request->get($this->querySelectedAttribute)) {
             $current_selected_id = Yii::$app->request->get($this->queryParentAttribute);
         }
+        $checked = Yii::$app->request->get('checked', '');
         $cacheKey = "AdjacencyFullTreeData:{$this->cacheKey}:{$this->querySortOrder}:{$id}"
-            . Yii::$app->multilingual->language_id . $this->showHiddenInTree;
-
+            . Yii::$app->multilingual->language_id . $this->showHiddenInTree . $checked;
+        if (false === empty($checked)) {
+            $checked = explode(',', $checked);
+        } else {
+            $checked = [];
+        }
         if (false === $result = Yii::$app->cache->get($cacheKey)) {
             $contexts = ArrayHelper::map(Context::find()->all(), 'id', 'name');
             /** @var ActiveQuery $query */
@@ -147,8 +150,8 @@ class BaseEntityTreeAction extends Action
                 if (null !== $entityId && $entityId != $row['entity_id']) {
                     self::setState($item, ['checkbox_disabled' => true]);
                 }
-                if (true === in_array($row[$this->modelIdAttribute], $this->checked)) {
-                    self::setState($item, ['state' => ['opened' => true, 'selected' => true]]);
+                if (true === in_array($row[$this->modelIdAttribute], $checked)) {
+                    self::setState($item, ['opened' => true, 'checked' => true, 'selected' => true]);
                 }
                 if (null !== $this->varyByTypeAttribute) {
                     $item['type'] = $row[$this->varyByTypeAttribute];
