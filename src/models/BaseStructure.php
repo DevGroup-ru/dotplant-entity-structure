@@ -204,7 +204,6 @@ class BaseStructure extends ActiveRecord implements PermissionsInterface, Struct
     }
 
 
-
     /**
      * @return ActiveQuery
      */
@@ -227,6 +226,38 @@ class BaseStructure extends ActiveRecord implements PermissionsInterface, Struct
     public function getChildren()
     {
         return $this->hasMany(static::class, ['parent_id' => 'id']);
+    }
+
+
+    /**
+     * @return array
+     */
+    public function getParentsIds()
+    {
+        $cacheKey = 'BaseStructure:parentsIds:' . $this->id;
+        if (false === $result = Yii::$app->cache->get($cacheKey)) {
+            $result = [];
+            $parent_id = $this->parent_id;
+            while ($parent_id > 0) {
+                $result[] = (int) $parent_id;
+                $parent_id = self::find()->select('parent_id')->where(['id' => $parent_id])->scalar();
+                if ($parent_id === false) {
+                    break;
+                }
+            }
+            $result = array_reverse($result);
+            \Yii::$app->cache->set(
+                $cacheKey,
+                $result,
+                86400,
+                new TagDependency(
+                    [
+                        'tags' => $this->objectCompositeTag(),
+                    ]
+                )
+            );
+        }
+        return $result;
     }
 
     /**
