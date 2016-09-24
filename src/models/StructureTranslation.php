@@ -151,10 +151,10 @@ class StructureTranslation extends ActiveRecord
                 ? (empty($parentData['slug']) ? '' : trim($parentData['slug'], '/'))
                 : trim($parentData['url'], '/');
             $url = empty($parentSlug)
-                ? '/' . trim($this->slug, '/')
-                : '/' . $parentSlug . '/' . trim($this->slug, '/');
+                ? trim($this->slug, '/')
+                : $parentSlug . '/' . trim($this->slug, '/');
         } else {
-            $url = '/' . trim($this->slug, '/');
+            $url = trim($this->slug, '/');
         }
         return $url;
     }
