@@ -11,6 +11,8 @@ use yii\web\UrlRuleInterface;
 
 class StructureUrlRule extends Object implements UrlRuleInterface
 {
+    const ROUTE = 'universal/show';
+    const MAIN_PAGE_URL = '~mainpage~';
 
     /**
      * Parses the given request and returns the corresponding route and parameters.
@@ -25,8 +27,24 @@ class StructureUrlRule extends Object implements UrlRuleInterface
     {
         $pathInfo = $request->getPathInfo();
         if ($pathInfo === '') {
-            $pathInfo = '~mainpage~';
+            $pathInfo = self::MAIN_PAGE_URL;
         }
+        $modelId = BaseStructure::find()
+            ->where(['url' => $pathInfo])
+            ->scalar();
+        return $modelId !== false
+            ?
+                [
+                    self::ROUTE,
+                    [
+                        'entities' => [
+                            'DotPlant\EntityStructure\models\BaseStructure' => [
+                                $modelId
+                            ]
+                        ]
+                    ]
+                ]
+            : false;
         /*
          * Go through structure
          *
@@ -92,6 +110,21 @@ class StructureUrlRule extends Object implements UrlRuleInterface
      */
     public function createUrl($manager, $route, $params)
     {
-        return false;
+        // @todo: implement all available functional
+        if (
+            $route !== self::ROUTE
+            || !isset($params['entities']['DotPlant\EntityStructure\models\BaseStructure'])
+            || count($params['entities']['DotPlant\EntityStructure\models\BaseStructure']) !== 1
+        ) {
+            return false;
+        }
+        $languageId = isset($params['languageId']) ? $params['languageId'] : Yii::$app->multilingual->language_id;
+        $url = (new yii\db\Query()) // it's released via Query to prevent auto-attaching of language id
+            ->select(['url'])
+            ->from(BaseStructure::tableName())
+            ->where(['id' => $params['entities']['DotPlant\EntityStructure\models\BaseStructure'], 'language_id' => $languageId])
+            ->innerJoin(BaseStructure::getTranslationTableName(), 'id = model_id')
+            ->scalar();
+        return $url !== self::MAIN_PAGE_URL ? $url : '';
     }
 }
