@@ -7,6 +7,9 @@
  * @var string $entitySelectorPrefix
  */
 
+use DevGroup\AdminUtils\events\ModelEditForm;
+use DotPlant\EntityStructure\actions\BaseEntityEditAction;
+use DotPlant\EntityStructure\StructureModule;
 use kartik\switchinput\SwitchInput;
 use DevGroup\Multilingual\models\Context;
 use dmstr\widgets\Alert;
@@ -37,12 +40,15 @@ $js = <<<JS
 JS;
 $this->registerJs($js, View::POS_HEAD);
 ContextBehaviorAsset::register($this);
+
+StructureModule::module()->trigger(BaseEntityEditAction::EVENT_BEFORE_FORM);
 $form = \yii\bootstrap\ActiveForm::begin([
     'id' => $entitySelectorPrefix . '-form',
 //    'options' => [
 //        'enctype' => 'multipart/form-data'
 //    ]
 ]);
+$event = new ModelEditForm($form, $model);
 ?>
 <?= Alert::widget() ?>
 <?= $form->field($model, 'entity_id', ['template' => '{input}'])->hiddenInput(['value' => $model->entity_id]) ?>
@@ -129,6 +135,7 @@ $form = \yii\bootstrap\ActiveForm::begin([
                     'form' => $form,
                 ]) ?>
             </div>
+            <?php StructureModule::module()->trigger(BaseEntityEditAction::EVENT_FORM_BEFORE_SUBMIT, $event); ?>
             <?php if (true === $canSave) : ?>
                 <div class="row">
                     <div class="col-sm-12">
@@ -140,6 +147,9 @@ $form = \yii\bootstrap\ActiveForm::begin([
                     </div>
                 </div>
             <?php endif; ?>
+            <?php StructureModule::module()->trigger(BaseEntityEditAction::EVENT_FORM_AFTER_SUBMIT, $event); ?>
         </div>
     </div>
 <?php $form::end(); ?>
+<?php  StructureModule::module()->trigger(BaseEntityEditAction::EVENT_AFTER_FORM, $event); ?>
+

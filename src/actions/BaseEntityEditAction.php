@@ -3,6 +3,7 @@
 namespace DotPlant\EntityStructure\actions;
 
 use DevGroup\AdminUtils\actions\BaseAdminAction;
+use DevGroup\AdminUtils\events\ModelEditAction;
 use DevGroup\DataStructure\behaviors\HasProperties;
 use DevGroup\DataStructure\traits\PropertiesTrait;
 use DevGroup\Multilingual\behaviors\MultilingualActiveRecord;
@@ -21,6 +22,16 @@ use yii\web\NotFoundHttpException;
  */
 class BaseEntityEditAction extends BaseAdminAction
 {
+    const EVENT_BEFORE_INSERT = 'dotplant.entity-structure.baseEntityBeforeInsert';
+    const EVENT_BEFORE_UPDATE = 'dotplant.entity-structure.baseEntityBeforeUpdate';
+    const EVENT_AFTER_INSERT = 'dotplant.entity-structure.baseEntityAfterInsert';
+    const EVENT_AFTER_UPDATE = 'dotplant.entity-structure.baseEntityAfterUpdate';
+
+    const EVENT_FORM_BEFORE_SUBMIT = 'dotplant.entity-structure.baseEntityFormBeforeSubmit';
+    const EVENT_FORM_AFTER_SUBMIT = 'dotplant.entity-structure.baseEntityFormAfterSubmit';
+
+    const EVENT_BEFORE_FORM = 'dotplant.entity-structure.baseEntityBeforeForm';
+    const EVENT_AFTER_FORM = 'dotplant.entity-structure.baseEntityAfterForm';
     /**
      * @inheritdoc
      */
@@ -45,7 +56,9 @@ class BaseEntityEditAction extends BaseAdminAction
             true,
             true,
             86400,
-            new NotFoundHttpException(Yii::t('dotplant.entity.structure', '{model} not found!',
+            new NotFoundHttpException(Yii::t(
+                'dotplant.entity.structure',
+                '{model} not found!',
                 ['model' => Yii::t($entityClass::TRANSLATION_CATEGORY, $entityName)]
             ))
         );
@@ -70,6 +83,8 @@ class BaseEntityEditAction extends BaseAdminAction
                 throw new ForbiddenHttpException(Yii::t('yii', 'You are not allowed to perform this action.'));
             }
             if (true === $structureModel->load($post)) {
+                $event = new ModelEditAction($structureModel);
+
                 $translationClass = Yii::createObject($structureModel->getTranslationModelClassName());
                 $translations = Yii::$app->request->post($translationClass->formName(), []);
                 $translationClass = null;
@@ -83,10 +98,22 @@ class BaseEntityEditAction extends BaseAdminAction
                         $structureModel->translate($language)->$attribute = $translation;
                     }
                 }
-                if (true === $structureModel->validate()) {
+                $event->isValid = $structureModel->validate();
+                $structureModel->isNewRecord === true?
+                    $this->trigger(self::EVENT_BEFORE_INSERT, $event) :
+                    $this->trigger(self::EVENT_BEFORE_UPDATE, $event);
+
+                if (true === $event->isValid) {
                     if (true === $structureModel->save(false)) {
-                        Yii::$app->session->setFlash('success',
-                            Yii::t('dotplant.entity.structure', '{model} successfully saved!',
+                        $structureModel->isNewRecord === true ?
+                            $this->trigger(self::EVENT_AFTER_INSERT, $event) :
+                            $this->trigger(self::EVENT_AFTER_UPDATE, $event);
+
+                        Yii::$app->session->setFlash(
+                            'success',
+                            Yii::t(
+                                'dotplant.entity.structure',
+                                '{model} successfully saved!',
                                 ['model' => Yii::t($entityClass::TRANSLATION_CATEGORY, $entityName)]
                             )
                         );
@@ -100,8 +127,11 @@ class BaseEntityEditAction extends BaseAdminAction
                             ]);
                         }
                     } else {
-                        Yii::$app->session->setFlash('error',
-                            Yii::t('dotplant.entity.structure', 'An error occurred while saving {model}!',
+                        Yii::$app->session->setFlash(
+                            'error',
+                            Yii::t(
+                                'dotplant.entity.structure',
+                                'An error occurred while saving {model}!',
                                 ['model' => Yii::t($entityClass::TRANSLATION_CATEGORY, $entityName)]
                             )
                         );
