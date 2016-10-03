@@ -22,7 +22,7 @@ class BaseEntityListAction extends BaseAdminAction
      */
     public function run($id = null, $context_id = null)
     {
-        if (false === Yii::$app->user->can('backend-view')) {
+        if (false === Yii::$app->user->can('dotplant-structure-view')) {
             throw new ForbiddenHttpException(Yii::t(
                 'yii', 'You are not allowed to perform this action.'
             ));
