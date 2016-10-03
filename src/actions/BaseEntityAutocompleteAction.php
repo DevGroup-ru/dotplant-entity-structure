@@ -37,7 +37,7 @@ class BaseEntityAutocompleteAction extends BaseAdminAction
         if (false === Yii::$app->request->isAjax) {
             throw new NotFoundHttpException(Yii::t('dotplant.entity.structure', 'Page not found'));
         }
-        if (false === Yii::$app->user->can('backend-view')) {
+        if (false === Yii::$app->user->can('dotplant-structure-view')) {
             throw new ForbiddenHttpException(Yii::t(
                 'yii', 'You are not allowed to perform this action.'
             ));
