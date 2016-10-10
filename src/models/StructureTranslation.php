@@ -27,6 +27,8 @@ use yii\db\Query;
  * @property $meta_description
  * @property $slug
  * @property $url
+ * @property $announce
+ * @property $content
  * @property $is_active
  * @property $packed_json_content
  * @property $packed_json_providers
@@ -60,6 +62,7 @@ class StructureTranslation extends ActiveRecord
 
     protected $rules = [
         [['is_active'], 'integer'],
+        [['announce', 'content'], 'string'],
         ['name', 'string', 'max' => 255],
         ['name', 'required'],
         ['url', 'validateUrl', 'skipOnEmpty' => false, 'skipOnError' => false],
