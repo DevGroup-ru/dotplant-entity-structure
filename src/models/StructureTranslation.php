@@ -62,7 +62,7 @@ class StructureTranslation extends ActiveRecord
 
     protected $rules = [
         [['is_active'], 'integer'],
-        [['announce', 'content'], 'string'],
+        [['announce', 'description'], 'string'],
         ['name', 'string', 'max' => 255],
         ['name', 'required'],
         ['url', 'validateUrl', 'skipOnEmpty' => false, 'skipOnError' => false],

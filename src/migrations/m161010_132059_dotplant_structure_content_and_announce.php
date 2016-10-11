@@ -15,7 +15,7 @@ class m161010_132059_dotplant_structure_content_and_announce extends Migration
 
         $this->addColumn(
             StructureTranslation::tableName(),
-            'content',
+            'description',
             $this->text()
         );
     }
@@ -30,7 +30,7 @@ class m161010_132059_dotplant_structure_content_and_announce extends Migration
 
         $this->dropColumn(
             StructureTranslation::tableName(),
-            'content'
+            'description'
         );
     }
 
