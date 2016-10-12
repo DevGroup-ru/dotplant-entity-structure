@@ -2,27 +2,31 @@
 
 namespace DotPlant\EntityStructure\models;
 
+use DevGroup\DataStructure\behaviors\PackedJsonAttributes;
 use DevGroup\TagDependencyHelper\CacheableActiveRecord;
 use DevGroup\TagDependencyHelper\TagDependencyTrait;
-use DotPlant\EntityStructure\StructureModule;
 use yii\base\InvalidParamException;
 use yii\caching\TagDependency;
 use yii\db\ActiveRecord;
 use Yii;
 
 /**
- * This is the model class for table "{{%entity}}".
+ * This is the model class for table "{{%dotplant_entity}}".
  *
  * @property integer $id
  * @property string $name
  * @property string $route
  * @property string $class_name
+ * @property string $tree_icon
+ * @property string $packed_json_route_handlers
+ * @property array $route_handlers
  *
  * @property BaseStructure[] $structure
  */
 class Entity extends ActiveRecord
 {
     use TagDependencyTrait;
+
     /** @var array */
     private static $entitiesMap = [];
 
@@ -42,6 +46,9 @@ class Entity extends ActiveRecord
         return [
             'CacheableActiveRecord' => [
                 'class' => CacheableActiveRecord::class,
+            ],
+            'packedJsonAttributes' => [
+                'class' => PackedJsonAttributes::class,
             ],
         ];
     }
@@ -63,6 +70,7 @@ class Entity extends ActiveRecord
                 'targetClass' => BaseStructure::class,
                 'targetAttribute' => ['id' => 'entity_id']
             ],
+            [['packed_json_route_handlers'], 'default', 'value' => '[]'],
         ];
     }
 
@@ -76,6 +84,8 @@ class Entity extends ActiveRecord
             'name' => Yii::t('dotplant.entity.structure', 'Name'),
             'route' => Yii::t('dotplant.entity.structure', 'Route'),
             'class_name' => Yii::t('dotplant.entity.structure', 'Class Name'),
+            'tree_icon' => Yii::t('dotplant.entity.structure', 'Tree icon'),
+            'packed_json_route_handlers' => Yii::t('dotplant.entity.structure', 'Route handlers'),
         ];
     }
 
@@ -171,5 +181,4 @@ class Entity extends ActiveRecord
         }
         return self::$entitiesMap;
     }
-
 }

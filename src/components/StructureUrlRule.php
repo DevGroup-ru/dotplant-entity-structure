@@ -3,8 +3,10 @@
 namespace DotPlant\EntityStructure\components;
 
 use DotPlant\EntityStructure\models\BaseStructure;
+use DotPlant\EntityStructure\models\Entity;
 use yii;
 use yii\base\Object;
+use yii\helpers\ArrayHelper;
 use yii\web\Request;
 use yii\web\UrlManager;
 use yii\web\UrlRuleInterface;
@@ -29,22 +31,6 @@ class StructureUrlRule extends Object implements UrlRuleInterface
         if ($pathInfo === '') {
             $pathInfo = self::MAIN_PAGE_URL;
         }
-        $modelId = BaseStructure::find()
-            ->where(['url' => $pathInfo])
-            ->scalar();
-        return $modelId !== false
-            ?
-                [
-                    self::ROUTE,
-                    [
-                        'entities' => [
-                            'DotPlant\EntityStructure\models\BaseStructure' => [
-                                $modelId
-                            ]
-                        ]
-                    ]
-                ]
-            : false;
         /*
          * Go through structure
          *
@@ -59,43 +45,69 @@ class StructureUrlRule extends Object implements UrlRuleInterface
             $parts = explode('/', preg_replace('#/+#', '/', $pathInfo));
             /** @var BaseStructure $structure */
             $structure = null;
-            foreach ($parts as $slug) {
+            $lastStructure = null;
+            $route = self::ROUTE;
+            $routeParams = [];
+            foreach ($parts as $index => $slug) {
                 $structure = BaseStructure::find()
-                    ->where([BaseStructure::getTranslationTableName() . '.slug' => $slug])
-                    ->andWhere(['is_deleted' => false])
-                    ->andWhere([BaseStructure::getTranslationTableName() . '.is_active' => true])
-                    ->andWhere([
-                        'parent_id' => $structure === null ? null : $structure->id
-                    ])
-                    ->select([
-                        'id', 'entity_id'
-                    ])
+                    ->select(['id', 'entity_id'])
+                    ->where(
+                        [
+                            // @todo: Use SQL-index
+                            BaseStructure::getTranslationTableName() . '.slug' => $slug,
+                            BaseStructure::getTranslationTableName() . '.is_active' => true,
+                            'is_deleted' => false,
+                            'parent_id' => $structure === null ? null : $structure->id,
+                        ]
+                    )
                     ->one();
-
                 if ($structure === null) {
-                    // @todo here we must handle the case when structure model can handle other parameters itself
-                    return false;
+                    if (
+                        $lastStructure === null
+                        || ($entity = Entity::findOne($lastStructure->entity_id)) === null
+                        || count($slugs = array_slice($parts, $index)) < 1
+                    ) {
+                        return false;
+                    }
+                    foreach ($entity->route_handlers as $handlerDefinition) {
+                        $handler = Yii::createObject($handlerDefinition);
+                        $result = $handler->parse($lastStructure->id, $slugs);
+                        if ($result['isHandled']) {
+                            $routeParams = ArrayHelper::merge(
+                                $routeParams,
+                                $result['routeParams']
+                            );
+                            if (isset($result['route'])) {
+                                $route = $result['route'];
+                            }
+                            $slugs = $result['slugs'];
+                            if ($result['preventNextHandler'] || count($result['slugs']) === 0) {
+                                break;
+                            }
+                        }
+                    }
+                    if (count($slugs) > 0) {
+                        return false;
+                    }
+                } else {
+                    $lastStructure = $structure;
                 }
             }
-//TODO get to the bottom and implement
-//            $conf = $structure->getEntityConfiguration();
-//            if ($conf === null) {
-            return false;
-//            }
-
-            return [
-                $conf['route'],
+            $routeParams = ArrayHelper::merge(
+                $routeParams,
                 [
                     'entities' => [
-                        $conf['class_name'] => [
-                            $structure->id
+                        BaseStructure::class => [
+                            $lastStructure->id,
                         ]
-                    ]
+                    ],
                 ]
+            );
+            return [
+                $route,
+                $routeParams
             ];
-
         }
-
         return false;
     }
 
