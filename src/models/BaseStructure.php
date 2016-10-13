@@ -9,9 +9,11 @@ use DevGroup\Multilingual\traits\MultilingualTrait;
 use DevGroup\TagDependencyHelper\CacheableActiveRecord;
 use DevGroup\TagDependencyHelper\NamingHelper;
 use DevGroup\TagDependencyHelper\TagDependencyTrait;
+use DotPlant\EntityStructure\interfaces\MainEntitySeoInterface;
 use DotPlant\EntityStructure\interfaces\PermissionsInterface;
 use DotPlant\EntityStructure\interfaces\StructureConfigInterface;
 use DotPlant\EntityStructure\StructureModule;
+use DotPlant\EntityStructure\traits\MainEntitySeoTrait;
 use yii\caching\TagDependency;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
@@ -39,11 +41,12 @@ use yii\helpers\ArrayHelper;
  * @property StructureTranslation $defaultTranslation
  * @property StructureTranslation[] $translations
  */
-class BaseStructure extends ActiveRecord implements PermissionsInterface, StructureConfigInterface
+class BaseStructure extends ActiveRecord implements PermissionsInterface, StructureConfigInterface, MainEntitySeoInterface
 {
     use MultilingualTrait;
     use TagDependencyTrait;
     use PropertiesTrait;
+    use MainEntitySeoTrait;
 
     /** string this is for base actions translation */
     const TRANSLATION_CATEGORY = 'dotplant.entity.structure';
