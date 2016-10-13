@@ -20,5 +20,18 @@ interface AdditionalRouteHandlerInterface
      *      'slugs' => ['filter-value1', 'filter-value2'], // leftover slugs
      *  ]
      */
-    public function parse($structureId, $slugs);
+    public function parseUrl($structureId, $slugs);
+
+    /**
+     * @param string $route
+     * @param array $params
+     * @param string $url
+     * @return mixed in the next format
+     *  [
+     *      'isHandled' => true, // is handler processed successfully?
+     *      'preventNextHandler' => true, // prevent next handler executing
+     *      'url' => $url . '/' . $goods->slug, // updated url
+     *  ];
+     */
+    public function createUrl($route, $params, $url);
 }

@@ -27,18 +27,11 @@ class StructureUrlRule extends Object implements UrlRuleInterface
      */
     public function parseRequest($manager, $request)
     {
+        // @todo: Add caching
         $pathInfo = $request->getPathInfo();
         if ($pathInfo === '') {
             $pathInfo = self::MAIN_PAGE_URL;
         }
-        /*
-         * Go through structure
-         *
-         * Find needed tree leaf
-         * Find entity of it
-         * Get entity route(not added in entity yet i believe)
-         * Change route to needed
-         */
         $cacheKey = "StructureUrlCache:$pathInfo";
         $cached = Yii::$app->cache->get($cacheKey);
         if ($cached === false) {
@@ -71,7 +64,7 @@ class StructureUrlRule extends Object implements UrlRuleInterface
                     }
                     foreach ($entity->route_handlers as $handlerDefinition) {
                         $handler = Yii::createObject($handlerDefinition);
-                        $result = $handler->parse($lastStructure->id, $slugs);
+                        $result = $handler->parseUrl($lastStructure->id, $slugs);
                         if ($result['isHandled']) {
                             $routeParams = ArrayHelper::merge(
                                 $routeParams,
@@ -125,18 +118,31 @@ class StructureUrlRule extends Object implements UrlRuleInterface
         // @todo: implement all available functional
         if (
             $route !== self::ROUTE
-            || !isset($params['entities']['DotPlant\EntityStructure\models\BaseStructure'])
-            || count($params['entities']['DotPlant\EntityStructure\models\BaseStructure']) !== 1
+            || !isset($params['entities'][BaseStructure::class])
+            || count($params['entities'][BaseStructure::class]) !== 1
         ) {
             return false;
         }
         $languageId = isset($params['languageId']) ? $params['languageId'] : Yii::$app->multilingual->language_id;
-        $url = (new yii\db\Query()) // it's released via Query to prevent auto-attaching of language id
-            ->select(['url'])
+        $structure = (new yii\db\Query()) // it's released via Query to prevent auto-attaching of language id
+            ->select(['url', 'entity_id'])
             ->from(BaseStructure::tableName())
             ->where(['id' => $params['entities']['DotPlant\EntityStructure\models\BaseStructure'], 'language_id' => $languageId])
             ->innerJoin(BaseStructure::getTranslationTableName(), 'id = model_id')
-            ->scalar();
-        return $url !== self::MAIN_PAGE_URL ? $url : '';
+            ->one();
+        if ($structure === false || ($entity = Entity::findOne($structure['entity_id'])) === null) {
+            return false;
+        }
+        foreach ($entity->route_handlers as $handlerDefinition) {
+            $handler = Yii::createObject($handlerDefinition);
+            $result = $handler->createUrl($route, $params, $structure['url']);
+            if ($result['isHandled']) {
+                $structure['url'] = $result['url'];
+                if ($result['preventNextHandler']) {
+                    break;
+                }
+            }
+        }
+        return $structure['url'] !== self::MAIN_PAGE_URL ? $structure['url'] : '';
     }
 }
