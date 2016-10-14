@@ -17,4 +17,9 @@ interface MainEntitySeoInterface
      * @return string
      */
     public function getSeoMetaDescription();
+
+    /**
+     * @return array
+     */
+    public function getSeoBreadcrumbs();
 }

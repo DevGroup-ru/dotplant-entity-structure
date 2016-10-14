@@ -19,6 +19,7 @@ use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 use Yii;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Url;
 
 /**
  * This is the model class for table "{{%structure}}".
@@ -398,5 +399,46 @@ class BaseStructure extends ActiveRecord implements PermissionsInterface, Struct
             'expand_in_tree' => Yii::t('dotplant.entity.structure', 'Expand In Tree'),
             'sort_order' => Yii::t('dotplant.entity.structure', 'Sort Order'),
         ];
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getSeoBreadcrumbs()
+    {
+        $breadcrumbs = [
+            [
+                'label' => $this->defaultTranslation->breadcrumbs_label,
+                'url' => Url::toRoute(
+                    [
+                        '/universal/show',
+                        'entities' => [
+                            self::class => [$this->id],
+                        ]
+                    ]
+                ),
+            ],
+        ];
+        $modelId = $this->parent_id;
+        while ($modelId !== null) {
+            $model = static::findOne($modelId);
+            if ($model != null) {
+                $breadcrumbs[] = [
+                    'label' => $model->defaultTranslation->breadcrumbs_label,
+                    'url' => Url::toRoute(
+                        [
+                            '/universal/show',
+                            'entities' => [
+                                self::class => [$model->id],
+                            ]
+                        ]
+                    ),
+                ];
+                $modelId = $model->parent_id;
+            } else {
+                $modelId = null;
+            }
+        }
+        return array_reverse($breadcrumbs);
     }
 }
