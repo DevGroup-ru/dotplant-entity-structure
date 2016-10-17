@@ -42,7 +42,7 @@ class StructureController extends Controller
                             BaseStructure::getTranslationTableName(),
                             ['url' => $url],
                             ['model_id' => $id, 'language_id' => $languageId]
-                        );
+                        )->execute();
                     }
                     $tree[$id]['translations'][$languageId] = $url;
                 } catch (\Exception $e) {
