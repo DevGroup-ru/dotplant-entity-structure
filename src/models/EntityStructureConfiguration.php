@@ -54,7 +54,11 @@ class EntityStructureConfiguration extends BaseConfigurationModel
      */
     public function consoleApplicationAttributes()
     {
-        return [];
+        return [
+            'controllerMap' => [
+                'structure' => \DotPlant\EntityStructure\commands\StructureController::class,
+            ],
+        ];
     }
 
     /**
