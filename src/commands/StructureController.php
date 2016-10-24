@@ -12,44 +12,68 @@ use yii\db\Query;
  */
 class StructureController extends Controller
 {
+
+    /**
+     * @var array
+     */
+    private $elements = [];
+
     /**
      * Check and regenerate compiled urls
      */
     public function actionRegenerateSlugs()
     {
-        $tree = (new Query())
+        $this->elements = (new Query())
             ->select(['id', 'parent_id'])
             ->from(BaseStructure::tableName())
             ->orderBy(['parent_id' => SORT_ASC])
             ->indexBy('id')
             ->all();
-        foreach ($tree as $id => $row) {
-            $translations = (new Query)
-                ->select(['model_id', 'language_id', 'slug', 'url'])
-                ->from(BaseStructure::getTranslationTableName())
-                ->where(['model_id' => $id])
-                ->indexBy('language_id')
-                ->all();
-            foreach ($translations as $languageId => $translation) {
-                $tree[$id]['translations'] = [];
-                try {
-                    $url = (int)$row['parent_id'] > 0
-                        ? $tree[$row['parent_id']]['translations'][$languageId] . '/' . $translation['slug']
-                        : $translation['slug'];
-                    if ($url != $translation['url']) {
-                        echo "Ok: {$id}\n";
-                        BaseStructure::getDb()->createCommand()->update(
-                            BaseStructure::getTranslationTableName(),
-                            ['url' => $url],
-                            ['model_id' => $id, 'language_id' => $languageId]
-                        )->execute();
-                    }
-                    $tree[$id]['translations'][$languageId] = $url;
-                } catch (\Exception $e) {
-                    // do nothing
-                }
 
+        foreach ($this->elements as &$element) {
+            if ((int)$element['parent_id'] === 0) {
+                $this->setTreeUrl($element);
             }
         }
     }
+
+    /**
+     * @param $currentRow
+     */
+    private function setTreeUrl(&$currentRow)
+    {
+        $translations = (new Query)
+            ->select(['model_id', 'language_id', 'slug', 'url'])
+            ->from(BaseStructure::getTranslationTableName())
+            ->where(['model_id' => $currentRow['id']])
+            ->indexBy('language_id')
+            ->all();
+        foreach ($translations as $languageId => $translation) {
+            $currentRow['translations'] = [];
+            try {
+                $url = (int)$currentRow['parent_id'] > 0
+                    ? $this->elements[$currentRow['parent_id']]['translations'][$languageId] . '/' . $translation['slug']
+                    : $translation['slug'];
+                if ($url != $translation['url']) {
+                    echo "Ok: {$currentRow['id']}\n";
+                    BaseStructure::getDb()->createCommand()->update(
+                        BaseStructure::getTranslationTableName(),
+                        ['url' => $url],
+                        ['model_id' => $currentRow['id'], 'language_id' => $languageId]
+                    )->execute();
+                }
+                $currentRow['translations'][$languageId] = $url;
+            } catch (\Exception $e) {
+                // do nothing
+            }
+        }
+
+        foreach ($this->elements as &$row) {
+            if ((int)$row['parent_id'] === (int)$currentRow['id']) {
+                $this->setTreeUrl($row);
+            }
+        }
+
+    }
+
 }
