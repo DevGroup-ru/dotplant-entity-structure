@@ -49,6 +49,7 @@ class StructureUrlRule extends Object implements UrlRuleInterface
                             // @todo: Use SQL-index
                             BaseStructure::getTranslationTableName() . '.slug' => $slug,
                             BaseStructure::getTranslationTableName() . '.is_active' => true,
+                            'context_id' => Yii::$app->multilingual->context_id,
                             'is_deleted' => false,
                             'parent_id' => $structure === null ? null : $structure->id,
                         ]
