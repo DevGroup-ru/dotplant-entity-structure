@@ -16,6 +16,8 @@ class StructureUrlRule extends Object implements UrlRuleInterface
     const ROUTE = 'universal/show';
     const MAIN_PAGE_URL = '~mainpage~';
 
+    protected $allowedUrlParams = ['page', 'sort'];
+
     /**
      * Parses the given request and returns the corresponding route and parameters.
      *
@@ -97,6 +99,11 @@ class StructureUrlRule extends Object implements UrlRuleInterface
                     ],
                 ]
             );
+            foreach ($this->allowedUrlParams as $allowedUrlParam) {
+                if ($request->get($allowedUrlParam) !== null) {
+                    $routeParams[$allowedUrlParam] = $request->get($allowedUrlParam);
+                }
+            }
             return [
                 $route,
                 $routeParams
@@ -144,6 +151,12 @@ class StructureUrlRule extends Object implements UrlRuleInterface
                 }
             }
         }
-        return $structure['url'] !== self::MAIN_PAGE_URL ? $structure['url'] : '';
+        $getParams = [];
+        foreach ($this->allowedUrlParams as $allowedUrlParam) {
+            if (isset($params[$allowedUrlParam])) {
+                $getParams[$allowedUrlParam] = $params[$allowedUrlParam];
+            }
+        }
+        return ($structure['url'] !== self::MAIN_PAGE_URL ? $structure['url'] : '') . (count($getParams) > 0 ? '?' . http_build_query($getParams) : '');
     }
 }
