@@ -60,7 +60,7 @@ class StructureUrlRule extends Object implements UrlRuleInterface
                 if ($structure === null) {
                     if (
                         $lastStructure === null
-                        || ($entity = Entity::findOne($lastStructure->entity_id)) === null
+                        || ($entity = Entity::loadModel($lastStructure->entity_id)) === null
                         || count($slugs = array_slice($parts, $index)) < 1
                     ) {
                         return false;
@@ -138,7 +138,7 @@ class StructureUrlRule extends Object implements UrlRuleInterface
             ->where(['id' => $params['entities']['DotPlant\EntityStructure\models\BaseStructure'], 'language_id' => $languageId])
             ->innerJoin(BaseStructure::getTranslationTableName(), 'id = model_id')
             ->one();
-        if ($structure === false || ($entity = Entity::findOne($structure['entity_id'])) === null) {
+        if ($structure === false || ($entity = Entity::loadModel($structure['entity_id'])) === null) {
             return false;
         }
         foreach ($entity->route_handlers as $handlerDefinition) {
