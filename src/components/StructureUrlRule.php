@@ -47,30 +47,49 @@ class StructureUrlRule extends Object implements UrlRuleInterface
             $route = self::ROUTE;
             $routeParams = [];
             foreach ($parts as $index => $slug) {
-                $structure = BaseStructure::find()
-                    ->select(['id', 'entity_id'])
-                    ->where(
-                        [
-                            // @todo: Use SQL-index
-                            BaseStructure::getTranslationTableName() . '.slug' => $slug,
-                            BaseStructure::getTranslationTableName() . '.is_active' => true,
-                            'context_id' => Yii::$app->multilingual->context_id,
-                            'is_deleted' => false,
-                            'parent_id' => $structure === null ? null : $structure->id,
-                        ]
-                    )
-                    ->one();
+                $key = "parseRequest:$slug:" . Yii::$app->multilingual->context_id . ":" . ($structure === null ? 'null' : $structure['id']);
+                $structureCached = Yii::$app->cache->get(md5($key));
+                if ($structureCached === false) {
+                    $structure = BaseStructure::find()
+                        ->select(['id', 'entity_id'])
+                        ->where(
+                            [
+                                // @todo: Use SQL-index
+                                BaseStructure::getTranslationTableName() . '.slug' => $slug,
+                                BaseStructure::getTranslationTableName() . '.is_active' => true,
+                                'context_id' => Yii::$app->multilingual->context_id,
+                                'is_deleted' => false,
+                                'parent_id' => $structure === null ? null : $structure['id'],
+                            ]
+                        )
+                        ->asArray(true)
+                        ->limit(1)
+                        ->one();
+
+                    if ($structure !== null) {
+                        Yii::$app->cache->set(
+                            $key,
+                            $structure,
+                            86400,
+                            new yii\caching\TagDependency([
+                                'tags' => NamingHelper::getObjectTag(BaseStructure::class, $structure['id'])
+                            ])
+                        );
+                    }
+                } else {
+                    $structure = $structureCached;
+                }
                 if ($structure === null) {
                     if (
                         $lastStructure === null
-                        || ($entity = Entity::loadModel($lastStructure->entity_id)) === null
+                        || ($entity = Entity::loadModel($lastStructure['entity_id'])) === null
                         || count($slugs = array_slice($parts, $index)) < 1
                     ) {
                         return false;
                     }
                     foreach ($entity->route_handlers as $handlerDefinition) {
                         $handler = Yii::createObject($handlerDefinition);
-                        $result = $handler->parseUrl($lastStructure->id, $slugs);
+                        $result = $handler->parseUrl($lastStructure['id'], $slugs);
                         if ($result['isHandled']) {
                             $routeParams = ArrayHelper::merge(
                                 $routeParams,
@@ -97,7 +116,7 @@ class StructureUrlRule extends Object implements UrlRuleInterface
                 [
                     'entities' => [
                         BaseStructure::class => [
-                            $lastStructure->id,
+                            $lastStructure['id'],
                         ]
                     ],
                 ]
