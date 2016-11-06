@@ -2,8 +2,11 @@
 
 namespace DotPlant\EntityStructure\components;
 
+use DevGroup\TagDependencyHelper\LazyCacheTrait;
+use DevGroup\TagDependencyHelper\NamingHelper;
 use DotPlant\EntityStructure\models\BaseStructure;
 use DotPlant\EntityStructure\models\Entity;
+use Faker\Provider\Base;
 use yii;
 use yii\base\Object;
 use yii\helpers\ArrayHelper;
@@ -132,12 +135,28 @@ class StructureUrlRule extends Object implements UrlRuleInterface
             return false;
         }
         $languageId = isset($params['languageId']) ? $params['languageId'] : Yii::$app->multilingual->language_id;
-        $structure = (new yii\db\Query()) // it's released via Query to prevent auto-attaching of language id
-            ->select(['url', 'entity_id'])
-            ->from(BaseStructure::tableName())
-            ->where(['id' => $params['entities']['DotPlant\EntityStructure\models\BaseStructure'], 'language_id' => $languageId])
-            ->innerJoin(BaseStructure::getTranslationTableName(), 'id = model_id')
-            ->one();
+        /** @var yii\caching\Cache|LazyCacheTrait $lazyCache */
+        $lazyCache = Yii::$app->cache;
+        $structureId = $params['entities'][BaseStructure::class];
+
+        $structure = $lazyCache->lazy(
+            function() use($structureId, $languageId) {
+                return (new yii\db\Query()) // it's released via Query to prevent auto-attaching of language id
+                ->select(['url', 'entity_id'])
+                    ->from(BaseStructure::tableName())
+                    ->where(['id' => $structureId, 'language_id' => $languageId])
+                    ->innerJoin(BaseStructure::getTranslationTableName(), 'id = model_id')
+                    ->one();
+            },
+            "createUrl:StructureRow:$languageId:" . implode(',', (array) $structureId),
+            86400,
+            new yii\caching\TagDependency([
+                'tags' => [
+                    NamingHelper::getObjectTag(Base::class, $structureId)
+                ]
+            ])
+        );
+
         if ($structure === false || ($entity = Entity::loadModel($structure['entity_id'])) === null) {
             return false;
         }
