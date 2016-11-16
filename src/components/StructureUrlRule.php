@@ -87,20 +87,22 @@ class StructureUrlRule extends Object implements UrlRuleInterface
                     ) {
                         return false;
                     }
-                    foreach ($entity->route_handlers as $handlerDefinition) {
-                        $handler = Yii::createObject($handlerDefinition);
-                        $result = $handler->parseUrl($lastStructure['id'], $slugs);
-                        if ($result['isHandled']) {
-                            $routeParams = ArrayHelper::merge(
-                                $routeParams,
-                                $result['routeParams']
-                            );
-                            if (isset($result['route'])) {
-                                $route = $result['route'];
-                            }
-                            $slugs = $result['slugs'];
-                            if ($result['preventNextHandler'] || count($result['slugs']) === 0) {
-                                break;
+                    if (is_array($entity->route_handlers)) {
+                        foreach ($entity->route_handlers as $handlerDefinition) {
+                            $handler = Yii::createObject($handlerDefinition);
+                            $result = $handler->parseUrl($lastStructure['id'], $slugs);
+                            if ($result['isHandled']) {
+                                $routeParams = ArrayHelper::merge(
+                                    $routeParams,
+                                    $result['routeParams']
+                                );
+                                if (isset($result['route'])) {
+                                    $route = $result['route'];
+                                }
+                                $slugs = $result['slugs'];
+                                if ($result['preventNextHandler'] || count($result['slugs']) === 0) {
+                                    break;
+                                }
                             }
                         }
                     }
@@ -179,13 +181,15 @@ class StructureUrlRule extends Object implements UrlRuleInterface
         if ($structure === false || ($entity = Entity::loadModel($structure['entity_id'])) === null) {
             return false;
         }
-        foreach ($entity->route_handlers as $handlerDefinition) {
-            $handler = Yii::createObject($handlerDefinition);
-            $result = $handler->createUrl($route, $params, $structure['url']);
-            if ($result['isHandled']) {
-                $structure['url'] = $result['url'];
-                if ($result['preventNextHandler']) {
-                    break;
+        if (is_array($entity->route_handlers)) {
+            foreach ($entity->route_handlers as $handlerDefinition) {
+                $handler = Yii::createObject($handlerDefinition);
+                $result = $handler->createUrl($route, $params, $structure['url']);
+                if ($result['isHandled']) {
+                    $structure['url'] = $result['url'];
+                    if ($result['preventNextHandler']) {
+                        break;
+                    }
                 }
             }
         }
