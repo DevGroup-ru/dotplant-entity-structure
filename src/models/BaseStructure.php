@@ -408,7 +408,9 @@ class BaseStructure extends ActiveRecord implements PermissionsInterface, Struct
     {
         $breadcrumbs = [
             [
-                'label' => $this->defaultTranslation->breadcrumbs_label,
+                'label' => !empty($this->defaultTranslation->breadcrumbs_label)
+                    ? $this->defaultTranslation->breadcrumbs_label
+                    : $this->defaultTranslation->name,
                 'url' => Url::toRoute(
                     [
                         '/universal/show',
@@ -424,7 +426,9 @@ class BaseStructure extends ActiveRecord implements PermissionsInterface, Struct
             $model = static::findOne($modelId);
             if ($model != null) {
                 $breadcrumbs[] = [
-                    'label' => $model->defaultTranslation->breadcrumbs_label,
+                    'label' => !empty($model->defaultTranslation->breadcrumbs_label)
+                        ? $model->defaultTranslation->breadcrumbs_label
+                        : $model->defaultTranslation->name,
                     'url' => Url::toRoute(
                         [
                             '/universal/show',
