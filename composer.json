@@ -24,7 +24,6 @@
     "devgroup/yii2-jstree-widget": "dev-master"
   },
   "require-dev": {
-    "yiisoft/yii2-codeception": "~2.0.0",
     "codeception/codeception": "^2.2"
   },
   "autoload": {
