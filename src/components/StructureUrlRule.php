@@ -52,14 +52,18 @@ class StructureUrlRule extends Object implements UrlRuleInterface
                 if ($structureCached === false) {
                     $structure = BaseStructure::find()
                         ->select(['id', 'entity_id'])
-                        ->where(
+                        ->where( // @todo: Use SQL-index
                             [
-                                // @todo: Use SQL-index
-                                BaseStructure::getTranslationTableName() . '.slug' => $slug,
-                                BaseStructure::getTranslationTableName() . '.is_active' => true,
-                                'context_id' => [Yii::$app->multilingual->context_id, null],
-                                'is_deleted' => false,
-                                'parent_id' => $structure === null ? null : $structure['id'],
+                                'and',
+                                [BaseStructure::getTranslationTableName() . '.slug' => $slug],
+                                [BaseStructure::getTranslationTableName() . '.is_active' => true],
+                                [
+                                    'or',
+                                    ['context_id' => Yii::$app->multilingual->context_id],
+                                    ['context_id' => null],
+                                ],
+                                ['is_deleted' => false],
+                                ['parent_id' => $structure === null ? null : $structure['id']],
                             ]
                         )
                         ->asArray(true)
