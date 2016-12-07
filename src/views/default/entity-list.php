@@ -77,7 +77,7 @@ HTML;
         ]);
         ?>
         <?= TreeWidget::widget([
-            'treeDataRoute' => ['/structure/entity-manage/get-tree', 'selected_id' => $parentId],
+            'treeDataRoute' => ['/structure/entity-manage/get-tree', 'selected_id' => $parentId, 'contextId' => 'all'],
             'reorderAction' => ['/structure/entity-manage/tree-reorder'],
             'changeParentAction' => ['/structure/entity-manage/tree-parent'],
             'treeType' => TreeWidget::TREE_TYPE_ADJACENCY,

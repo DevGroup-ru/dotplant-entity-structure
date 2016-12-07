@@ -64,10 +64,12 @@ class BaseEntityTreeAction extends Action
 
     /**
      * @param null $id
+     * @param null $contextId
+     *
      * @return array
      * @throws ForbiddenHttpException
      */
-    public function run($id = null)
+    public function run($id = null, $contextId = null)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         if (false === Yii::$app->user->can('dotplant-structure-view')) {
@@ -80,7 +82,7 @@ class BaseEntityTreeAction extends Action
             $current_selected_id = Yii::$app->request->get($this->queryParentAttribute);
         }
         $checked = Yii::$app->request->get('checked', '');
-        $cacheKey = "AdjacencyFullTreeData:{$this->cacheKey}:{$this->querySortOrder}:{$id}"
+        $cacheKey = "AdjacencyFullTreeData:{$this->cacheKey}:{$this->querySortOrder}:{$id}:{$contextId}"
             . Yii::$app->multilingual->language_id . $this->showHiddenInTree . $checked;
         if (false === empty($checked)) {
             $checked = explode(',', $checked);
@@ -97,10 +99,13 @@ class BaseEntityTreeAction extends Action
                     $this->contextIdAttribute => SORT_ASC,
                     $this->querySortOrder => SORT_ASC
                 ]);
-
             if (count($this->whereCondition) > 0) {
                 $query = $query->where($this->whereCondition);
             }
+            if ($contextId != 'all') {
+                $query->andWhere([$this->contextIdAttribute => $contextId]);
+            }
+
             $entityId = (null !== $this->className) ? Entity::getEntityIdForClass($this->className) : null;
             if (null === $rows = $query->asArray()->all()) {
                 return [];
@@ -134,7 +139,8 @@ class BaseEntityTreeAction extends Action
                 $text = ($row[$this->modelParentAttribute] > 0)
                     ? $row['defaultTranslation'][$this->modelLabelAttribute]
                     : ($row['defaultTranslation'][$this->modelLabelAttribute]
-                        . " ({$contexts[$row[$this->contextIdAttribute]]})");
+//                        . " ({$contexts[$row[$this->contextIdAttribute]]})"
+                    );
                 $item += [
                     'id' => $row[$this->modelIdAttribute],
                     'parent' => ($row[$this->modelParentAttribute] > 0) ? $row[$this->modelParentAttribute] : '#',
