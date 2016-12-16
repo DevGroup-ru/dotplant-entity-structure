@@ -90,7 +90,7 @@ class BaseEntityTreeAction extends Action
             $checked = [];
         }
         if (false === $result = Yii::$app->cache->get($cacheKey)) {
-            $contexts = ArrayHelper::map(Context::find()->all(), 'id', 'name');
+            $contexts = call_user_func([Yii::$app->multilingual->modelsMap['Context'], 'getListData']);
             /** @var ActiveQuery $query */
             $parentId = ('#' == $id) ? null : $id;
             $query = BaseStructure::find()

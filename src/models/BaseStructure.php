@@ -136,7 +136,6 @@ class BaseStructure extends ActiveRecord implements PermissionsInterface, Struct
             [
                 [
                     [
-                        'context_id',
                         'entity_id',
                     ],
                     'required'

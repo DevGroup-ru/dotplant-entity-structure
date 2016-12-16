@@ -26,7 +26,7 @@ $this->title = $model->getEditPageTitle();
 $breadcrumbs = empty($this->params['breadcrumbs']) ? [] : $this->params['breadcrumbs'];
 $this->params['breadcrumbs'] = ArrayHelper::merge($breadcrumbs, $model::getModuleBreadCrumbs());
 $this->params['breadcrumbs'][] = $this->title;
-$contexts = ArrayHelper::map(Context::find()->all(), 'id', 'name');
+$contexts = call_user_func([Yii::$app->multilingual->modelsMap['Context'], 'getListData']);
 $url = Url::to(['/structure/entity-manage/autocomplete']);
 $getContextUrl = Url::to(['/structure/entity-manage/get-context-id']);
 $missingText = Yii::t('dotplant.entity.structure', 'Missing parameter {param}', ['param' => 'getContextUrl']);
