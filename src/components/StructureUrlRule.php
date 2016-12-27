@@ -96,6 +96,9 @@ class StructureUrlRule extends Object implements UrlRuleInterface
                             $handler = Yii::createObject($handlerDefinition);
                             $result = $handler->parseUrl($lastStructure['id'], $slugs);
                             if ($result['isHandled']) {
+                                if (isset($routeParams['properties'])) {
+                                    unset($result['routeParams']['properties']);
+                                }
                                 $routeParams = ArrayHelper::merge(
                                     $routeParams,
                                     $result['routeParams']
